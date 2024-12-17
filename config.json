@@ -1,0 +1,137 @@
+[
+	{
+		"category": "✨ 常用",
+		"services": [
+			{
+				"name": "青空",
+				"uri": "https://main.elk.zone/home",
+				"icon": "/icons/sky.jpg"
+			},
+			{
+				"name": "Twitter",
+				"uri": "https://x.com/home",
+				"icon": "/icons/twitter.png"
+			},
+			{
+				"name": "其乐",
+				"uri": "https://keylol.com/",
+				"icon": "/icons/keylol.png"
+			},
+			{
+				"name": "v2ex",
+				"uri": "https://www.v2ex.com/",
+				"icon": "/icons/v2ex.png"
+			},
+			{
+				"name": "reddit",
+				"uri": "https://www.reddit.com/",
+				"icon": "/icons/reddit.png"
+			},
+			{
+				"name": "OutLook",
+				"uri": "https://outlook.live.com/mail/0/",
+				"icon": "/icons/outlook.png"
+			},
+			{
+				"name": "Hacker News",
+				"uri": "https://news.ycombinator.com/",
+				"icon": "/icons/hackernews.png"
+			},
+			{
+				"name": "Switch520",
+				"uri": "https://www.gamer520.com/",
+				"icon": "/icons/ns.png"
+			}
+		]
+	},
+	{
+		"category": "🌙 娱乐",
+		"services": [
+			{
+				"name": "哔哩哔哩",
+				"uri": "https://www.bilibili.com/",
+				"icon": "/icons/bilibili.png"
+			},
+			{
+				"name": "Youtbe",
+				"uri": "https://www.youtube.com/",
+				"icon": "/icons/youtube.png"
+			},
+			{
+				"name": "抖音",
+				"uri": "https://www.douyin.com/",
+				"icon": "/icons/douyin.png"
+			},
+			{
+				"name": "小红书",
+				"uri": "https://www.xiaohongshu.com/",
+				"icon": "/icons/redbook.png"
+			},
+			{
+				"name": "Instagram",
+				"uri": "https://www.instagram.com/",
+				"icon": "/icons/instagram.png"
+			},
+			{
+				"name": "Twitch",
+				"uri": "https://www.twitch.tv/",
+				"icon": "/icons/twitch.png"
+			},
+			{
+				"name": "Discord",
+				"uri": "https://discord.com/channels/@me",
+				"icon": "/icons/discord.png"
+			},
+			{
+				"name": "即刻",
+				"uri": "https://web.okjike.com/",
+				"icon": "/icons/jike.png"
+			}
+		]
+	},
+	{
+		"category": "⚡️ 工具",
+		"services": [
+			{
+				"name": "Gemini",
+				"uri": "https://gemini.google.com/app",
+				"icon": "/icons/gemini.png"
+			},
+			{
+				"name": "DuckDuckGo AI",
+				"uri": "https://duckduckgo.com/?q=DuckDuckGo+AI+Chat&ia=chat&duckai=1",
+				"icon": "/icons/duckduckgo.png"
+			},
+			{
+				"name": "Github",
+				"uri": "https://www.github.com/",
+				"icon": "/icons/github.png"
+			},
+			{
+				"name": "OneDrive",
+				"uri": "https://onedrive.live.com/",
+				"icon": "/icons/onedrive.png"
+			},
+			{
+				"name": "Google Keep",
+				"uri": "https://keep.google.com/",
+				"icon": "/icons/keep.png"
+			},
+			{
+				"name": "临时邮箱",
+				"uri": "https://www.emailtick.com/zh",
+				"icon": "/icons/tempemail.png"
+			},
+			{
+				"name": "Google 翻译",
+				"uri": "https://translate.google.com/",
+				"icon": "/icons/translate.png"
+			},
+			{
+				"name": "Emoji",
+				"uri": "https://emojipedia.org/",
+				"icon": "/icons/emoji.png"
+			}
+		]
+	}
+]

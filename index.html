@@ -6,7 +6,7 @@
     <title>松果</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffffff">
-    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -30,22 +30,23 @@
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
+            background: transparent;
+            border-radius: 8px;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            transition: background 0.2s ease;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #555;
+            background: rgba(0, 0, 0, 0.3);
         }
 
         .service-icon {
@@ -280,6 +281,29 @@
             opacity: 0;
             pointer-events: none;
         }
+
+        /* 为设置面板添加独特的滚动条样式 */
+        #settings-modal .bg-white {
+            scrollbar-gutter: stable;
+        }
+
+        #settings-modal .bg-white::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #settings-modal .bg-white::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        #settings-modal .bg-white::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Firefox 滚动条样式 */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 md:p-8">
@@ -403,10 +427,6 @@
                         <input type="range" id="max-width" min="800" max="1920" value="1421">
                         <span id="max-width-value">1421px</span>
                     </div>
-
-                    <button id="reset-all" class="w-full py-2 bg-red-50 text-red-600 rounded hover:bg-red-100">
-                        重置设置
-                    </button>
                 </div>
 
                 <!-- Grid Settings Section -->
@@ -420,6 +440,14 @@
                     </div>
                 </div>
 
+                <!-- 重置设置部分移动到这里 -->
+                <div class="space-y-4">
+                    <h4 class="font-medium">重置设置</h4>
+                    <button id="reset-all" class="w-full py-2 bg-red-50 text-red-600 rounded hover:bg-red-100">
+                        重置所有设置
+                    </button>
+                </div>
+
                 <div class="modal-footer">
                     <button id="close-settings" class="text-gray-600">
                         关闭
@@ -430,9 +458,25 @@
     </div>
 
     <script>
-        // IndexDB setup
+        // 1. 首先在脚本开头定义默认设置常量
+        const DEFAULT_SETTINGS = {
+            iconSize: 64,           // 改为与 CSS 变量一致
+            iconRadius: 12,
+            iconOpacity: 1,
+            iconGap: 12,
+            textSize: 18,
+            textColor: '#1a1a1a',
+            maxWidth: 1421,
+            showNames: true,
+            textIconGap: 12,
+            textPosition: 'row',
+            backgroundImage: null,
+            gridColumns: 6
+        };
+
+        // 删除或注释掉之前的 IndexedDB 初始化代码（在文件开头附近）
         let db;
-        const dbName = "navigationDB";
+        const dbName = "navigationDB";  // 保持使用这个数据库名
         const request = indexedDB.open(dbName, 1);
 
         request.onerror = (event) => {
@@ -451,60 +495,110 @@
             loadSettings();
         };
 
-        // Load all settings from IndexDB
+        // 2. 修改 loadSettings 函数，添加默认值处理
         function loadSettings() {
             const transaction = db.transaction(["settings"], "readonly");
             const store = transaction.objectStore("settings");
-            const request = store.getAll();
+            const request = store.getAllKeys();
 
             request.onsuccess = () => {
-                const settings = request.result;
-                if (settings) {
-                    // Apply background image if exists
-                    if (settings.backgroundImage) {
-                        document.body.style.backgroundImage = `url(${settings.backgroundImage})`;
-                        document.body.classList.add('custom-bg');
-                    }
-
-                    // Apply other settings if they exist
-                    if (settings.iconSize) document.documentElement.style.setProperty('--icon-size', settings.iconSize + 'px');
-                    if (settings.iconRadius) document.documentElement.style.setProperty('--icon-radius', settings.iconRadius + 'px');
-                    if (settings.iconOpacity) document.documentElement.style.setProperty('--icon-opacity', settings.iconOpacity);
-                    if (settings.iconGap) document.documentElement.style.setProperty('--icon-gap', settings.iconGap + 'px');
-                    if (settings.textSize) document.documentElement.style.setProperty('--text-size', settings.textSize + 'px');
-                    if (settings.textColor) document.documentElement.style.setProperty('--text-color', settings.textColor);
-                    if (settings.maxWidth) document.documentElement.style.setProperty('--max-width', settings.maxWidth + 'px');
-                    if (settings.textIconGap) document.documentElement.style.setProperty('--text-icon-gap', settings.textIconGap + 'px');
-                    if (settings.textPosition) {
-                        document.documentElement.style.setProperty('--text-position', settings.textPosition);
-                        $('.service-link').attr('data-text-position', settings.textPosition);
-                    }
-                    if (settings.gridColumns) document.documentElement.style.setProperty('--grid-columns', settings.gridColumns);
-                    
-                    // Update input values
-                    $('#icon-size').val(settings.iconSize || 80);
-                    $('#icon-radius').val(settings.iconRadius || 12);
-                    $('#icon-opacity').val((settings.iconOpacity || 1) * 100);
-                    $('#icon-gap').val(settings.iconGap || 12);
-                    $('#text-size').val(settings.textSize || 18);
-                    $('#text-icon-gap').val(settings.textIconGap || 12);
-                    $('#max-width').val(settings.maxWidth || 1421);
-                    $('#show-names').prop('checked', settings.showNames !== false);
-                    $('#text-position').val(settings.textPosition || 'row');
-                    $('#grid-columns').val(settings.gridColumns || 6);
-                    
-                    // Update display values
-                    updateDisplayValues();
-                    updateCategoryColor();
+                const keys = request.result;
+                if (keys.length > 0) {
+                    keys.forEach(key => {
+                        const valueRequest = store.get(key);
+                        valueRequest.onsuccess = () => {
+                            const value = valueRequest.result;
+                            applySetting(key, value);
+                        };
+                    });
+                } else {
+                    // 如果没有保存的设置，应用默认设置
+                    Object.entries(DEFAULT_SETTINGS).forEach(([key, value]) => {
+                        applySetting(key, value);
+                        saveSetting(key, value).catch(error => {
+                            console.error(`保存默认设置失败: ${key}`, error);
+                        });
+                    });
                 }
             };
         }
 
-        // Save a single setting to IndexDB
+        // 新增 applySetting 函数来处理单个设置的应用
+        function applySetting(key, value) {
+            switch(key) {
+                case 'backgroundImage':
+                    if (value) {
+                        document.body.style.backgroundImage = `url(${value})`;
+                        document.body.classList.add('custom-bg');
+                    }
+                    break;
+                case 'iconSize':
+                    document.documentElement.style.setProperty('--icon-size', value + 'px');
+                    $('#icon-size').val(value);
+                    break;
+                case 'iconRadius':
+                    document.documentElement.style.setProperty('--icon-radius', value + 'px');
+                    $('#icon-radius').val(value);
+                    break;
+                case 'iconOpacity':
+                    document.documentElement.style.setProperty('--icon-opacity', value);
+                    $('#icon-opacity').val(value * 100);
+                    break;
+                case 'iconGap':
+                    document.documentElement.style.setProperty('--icon-gap', value + 'px');
+                    $('#icon-gap').val(value);
+                    break;
+                case 'textSize':
+                    document.documentElement.style.setProperty('--text-size', value + 'px');
+                    $('#text-size').val(value);
+                    break;
+                case 'textColor':
+                    document.documentElement.style.setProperty('--text-color', value);
+                    $('#custom-color').val(value);
+                    break;
+                case 'maxWidth':
+                    document.documentElement.style.setProperty('--max-width', value + 'px');
+                    $('#max-width').val(value);
+                    break;
+                case 'textIconGap':
+                    document.documentElement.style.setProperty('--text-icon-gap', value + 'px');
+                    $('#text-icon-gap').val(value);
+                    break;
+                case 'textPosition':
+                    document.documentElement.style.setProperty('--text-position', value);
+                    $('#text-position').val(value);
+                    $('.service-link').attr('data-text-position', value);
+                    break;
+                case 'gridColumns':
+                    document.documentElement.style.setProperty('--grid-columns', value);
+                    $('#grid-columns').val(value);
+                    break;
+                case 'showNames':
+                    $('#show-names').prop('checked', value);
+                    $('.service-name').toggle(value);
+                    break;
+            }
+            updateDisplayValues();
+            updateCategoryColor();
+        }
+
+        // 修改 saveSetting 函数，添加成功回调
         function saveSetting(key, value) {
-            const transaction = db.transaction(["settings"], "readwrite");
-            const store = transaction.objectStore("settings");
-            store.put(value, key);
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(["settings"], "readwrite");
+                const store = transaction.objectStore("settings");
+                const request = store.put(value, key);
+                
+                request.onsuccess = () => {
+                    console.log(`保存设置成功: ${key} = ${value}`);
+                    resolve();
+                };
+                
+                request.onerror = () => {
+                    console.error(`保存设置失败: ${key}`);
+                    reject(request.error);
+                };
+            });
         }
 
         // Update all display values
@@ -524,7 +618,7 @@
             $('.category-section h2').css('color', textColor);
         }
 
-        // ��� document.ready 前添加性能优化相关代码
+        // 在 document.ready 前添加性能优化相关代码
         // 延迟加载非关键资源
         function loadDeferredStyles() {
             const addStylesNode = document.getElementById('deferred-styles');
@@ -603,7 +697,7 @@
                         <img data-src="${service.icon}" 
                              alt="${service.name}" 
                              class="service-icon lazy"
-                             src="/icons/default.png">
+                             src="/icons/sky.png">
                         <span class="service-name">${service.name}</span>
                     `;
                     
@@ -638,49 +732,61 @@
 
             // Icon size handler
             $('#icon-size').on('input', function() {
-                const value = $(this).val();
+                const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--icon-size', value + 'px');
                 $('#icon-size-value').text(value + 'px');
-                saveSetting('iconSize', parseInt(value));
+                saveSetting('iconSize', value).catch(error => {
+                    console.error('保存图标大小设置失败:', error);
+                });
             });
 
             // Icon radius handler
             $('#icon-radius').on('input', function() {
-                const value = $(this).val();
+                const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--icon-radius', value + 'px');
                 $('#icon-radius-value').text(value + 'px');
-                saveSetting('iconRadius', parseInt(value));
+                saveSetting('iconRadius', value).catch(error => {
+                    console.error('保存图标圆角设置失败:', error);
+                });
             });
 
             // Icon opacity handler
             $('#icon-opacity').on('input', function() {
-                const value = $(this).val() / 100;
-                document.documentElement.style.setProperty('--icon-opacity', value);
-                $('#icon-opacity-value').text($(this).val() + '%');
-                saveSetting('iconOpacity', value);
+                const value = parseInt($(this).val());
+                document.documentElement.style.setProperty('--icon-opacity', value / 100);
+                $('#icon-opacity-value').text(value + '%');
+                saveSetting('iconOpacity', value / 100).catch(error => {
+                    console.error('保存图标不透明度设置失败:', error);
+                });
             });
 
             // Icon gap handler
             $('#icon-gap').on('input', function() {
-                const value = $(this).val();
+                const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--icon-gap', value + 'px');
                 $('#icon-gap-value').text(value + 'px');
-                saveSetting('iconGap', parseInt(value));
+                saveSetting('iconGap', value).catch(error => {
+                    console.error('保存图标间距设置失败:', error);
+                });
             });
 
             // Text size handler
             $('#text-size').on('input', function() {
-                const value = $(this).val();
+                const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--text-size', value + 'px');
                 $('#text-size-value').text(value + 'px');
-                saveSetting('textSize', parseInt(value));
+                saveSetting('textSize', value).catch(error => {
+                    console.error('保存文字大小设置失败:', error);
+                });
             });
 
             // Show names handler
             $('#show-names').change(function() {
-                const checked = $(this).prop('checked');
-                $('.service-name').toggle(checked);
-                saveSetting('showNames', checked);
+                const value = $(this).prop('checked');
+                $('.service-name').toggle(value);
+                saveSetting('showNames', value).catch(error => {
+                    console.error('保存显示名称设置失败:', error);
+                });
             });
 
             // Custom color input handler
@@ -692,7 +798,9 @@
                 if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
                     $('.color-option').removeClass('selected');
                     document.documentElement.style.setProperty('--text-color', color);
-                    saveSetting('textColor', color);
+                    saveSetting('textColor', color).catch(error => {
+                        console.error('保存文字颜色设置失败:', error);
+                    });
                     colorInput.removeClass('border-red-500');
                     updateCategoryColor();
                 } else {
@@ -706,17 +814,21 @@
                 $(this).addClass('selected');
                 const color = $(this).data('color');
                 document.documentElement.style.setProperty('--text-color', color);
-                saveSetting('textColor', color);
+                saveSetting('textColor', color).catch(error => {
+                    console.error('保存文字颜色设置失败:', error);
+                });
                 $('#custom-color').val(color);
                 updateCategoryColor();
             });
 
             // Max width handler
             $('#max-width').on('input', function() {
-                const value = $(this).val();
+                const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--max-width', value + 'px');
                 $('#max-width-value').text(value + 'px');
-                saveSetting('maxWidth', parseInt(value));
+                saveSetting('maxWidth', value).catch(error => {
+                    console.error('保存最大宽度设置失败:', error);
+                });
             });
 
             // Background image handler
@@ -728,7 +840,9 @@
                         const base64Image = e.target.result;
                         document.body.style.backgroundImage = `url(${base64Image})`;
                         document.body.classList.add('custom-bg');
-                        saveSetting('backgroundImage', base64Image);
+                        saveSetting('backgroundImage', base64Image).catch(error => {
+                            console.error('保存背景图片设置失败:', error);
+                        });
                     };
                     reader.readAsDataURL(file);
                 }
@@ -738,7 +852,9 @@
             $('#reset-bg').click(function() {
                 document.body.style.backgroundImage = '';
                 document.body.classList.remove('custom-bg');
-                saveSetting('backgroundImage', null);
+                saveSetting('backgroundImage', null).catch(error => {
+                    console.error('保存背景图片设置失败:', error);
+                });
             });
 
             // Text position handler
@@ -746,94 +862,72 @@
                 const value = $(this).val();
                 $('.service-link').attr('data-text-position', value);
                 document.documentElement.style.setProperty('--text-position', value);
-                saveSetting('textPosition', value);
+                saveSetting('textPosition', value).catch(error => {
+                    console.error('保存文字位置设置失败:', error);
+                });
             });
 
             // Text-icon gap handler
             $('#text-icon-gap').on('input', function() {
-                const value = $(this).val();
+                const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--text-icon-gap', value + 'px');
                 $('#text-icon-gap-value').text(value + 'px');
-                saveSetting('textIconGap', parseInt(value));
+                saveSetting('textIconGap', value).catch(error => {
+                    console.error('保存文字间距设置失败:', error);
+                });
             });
 
             // Grid columns handler
             $('#grid-columns').on('input', function() {
-                const value = $(this).val();
+                const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--grid-columns', value);
                 $('#grid-columns-value').text(value);
-                saveSetting('gridColumns', parseInt(value));
+                saveSetting('gridColumns', value).catch(error => {
+                    console.error('保存网格设置失败:', error);
+                });
             });
 
             // Reset all handler
             $('#reset-all').click(function() {
-                const defaultSettings = {
-                    iconSize: 80,
-                    iconRadius: 12,
-                    iconOpacity: 1,
-                    iconGap: 12,
-                    textSize: 18,
-                    textColor: '#1a1a1a',
-                    maxWidth: 1421,
-                    showNames: true,
-                    textIconGap: 12,
-                    textPosition: 'row',
-                    backgroundImage: null,
-                    gridColumns: 6
-                };
-
                 // 先清除所有设置
                 const transaction = db.transaction(["settings"], "readwrite");
                 const store = transaction.objectStore("settings");
                 store.clear();
 
-                // 重新应用默认设置
-                Object.entries(defaultSettings).forEach(([key, value]) => {
-                    saveSetting(key, value);
+                // 使用默认设置常量
+                Object.entries(DEFAULT_SETTINGS).forEach(([key, value]) => {
+                    applySetting(key, value);
+                    saveSetting(key, value).catch(error => {
+                        console.error(`保存设置失败: ${key}`, error);
+                    });
                 });
-
-                // 更新 UI
-                document.documentElement.style.setProperty('--icon-size', '80px');
-                document.documentElement.style.setProperty('--icon-radius', '12px');
-                document.documentElement.style.setProperty('--icon-opacity', '1');
-                document.documentElement.style.setProperty('--icon-gap', '12px');
-                document.documentElement.style.setProperty('--text-size', '18px');
-                document.documentElement.style.setProperty('--text-color', '#1a1a1a');
-                document.documentElement.style.setProperty('--max-width', '1421px');
-                document.documentElement.style.setProperty('--text-icon-gap', '12px');
-                document.documentElement.style.setProperty('--text-position', 'row');
-                document.documentElement.style.setProperty('--grid-columns', '6');
 
                 // 重置背景
                 document.body.style.backgroundImage = '';
                 document.body.classList.remove('custom-bg');
 
-                // 重置所有输入值
-                $('#icon-size').val(80);
-                $('#icon-radius').val(12);
-                $('#icon-opacity').val(100);
-                $('#icon-gap').val(12);
-                $('#text-size').val(18);
-                $('#text-icon-gap').val(12);
-                $('#max-width').val(1421);
-                $('#show-names').prop('checked', true);
-                $('#text-position').val('row');
-                $('.service-link').attr('data-text-position', 'row');
-                $('.color-option').removeClass('selected');
-                $('.color-option[data-color="#1a1a1a"]').addClass('selected');
-                $('#custom-color').val('#1a1a1a');
-                $('#grid-columns').val(6);
-
                 // 更新显示值
                 updateDisplayValues();
                 updateCategoryColor();
-
-                // 重新加载页面以确保所有设置都被正确应用
-                window.location.reload();
             });
 
             // Load services from JSON file
             loadServices();
+
+            // 点击模态框背景关闭设置
+            $('#settings-modal').click(function(e) {
+                // 只有当点击的是模态框背景时才关闭
+                if (e.target === this) {
+                    $(this).addClass('hidden');
+                }
+            });
+
+            // 按 ESC 键关闭设置
+            $(document).keydown(function(e) {
+                if (e.key === 'Escape') {
+                    $('#settings-modal').addClass('hidden');
+                }
+            });
         });
 
         // Service Worker Registration for PWA
@@ -849,4 +943,3 @@
     </script>
 </body>
 </html>
-

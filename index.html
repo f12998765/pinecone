@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导航面板</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preload" href="/icons/default.png" as="image">
+    <style>
+        :root {
+            --icon-size: 64px;
+            --icon-radius: 12px;
+            --icon-opacity: 1;
+            --icon-gap: 12px;
+            --text-size: 18px;
+            --text-color: #1a1a1a;
+            --max-width: 1421px;
+            --text-icon-gap: 12px;
+            --text-position: row;
+            --min-icon-size: 80px;
+            --grid-columns: 6;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "苹方", "Hiragino Sans GB", "华文细黑", "Arial", sans-serif;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .service-icon {
+            width: var(--icon-size);
+            height: var(--icon-size);
+            border-radius: var(--icon-radius);
+            opacity: var(--icon-opacity);
+        }
+        
+        .service-name {
+            font-size: var(--text-size);
+            color: var(--text-color);
+        }
+
+        #settings-btn {
+            opacity: 0;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        body:hover #settings-btn {
+            opacity: 1;
+        }
+
+        .custom-bg {
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .color-option {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #000;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .slider-container label {
+            min-width: 70px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+        }
+
+        .slider-container span {
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .color-input {
+            width: 100px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        @media (max-width: 640px) {
+            /* 移动端图标和间距调整 */
+            :root {
+                --icon-size: 40px;
+                --icon-gap: 8px;
+                --text-size: 14px;
+                --text-icon-gap: 8px;
+            }
+
+            /* 移动端间距调整 */
+            .service-link {
+                padding: 0.25rem;
+            }
+        }
+
+        #services-container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .category-section .grid {
+            display: grid;
+            grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+            gap: var(--icon-gap);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .modal-footer button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .modal-footer button:hover {
+            background-color: #e5e7eb;
+        }
+
+        .reset-layout-btn {
+            width: 100%;
+            padding: 8px;
+            background-color: #fee2e2;
+            color: #dc2626;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .reset-layout-btn:hover {
+            background-color: #fecaca;
+        }
+
+        .service-link {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            width: 100%;
+            height: 100%;
+        }
+
+        .service-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .service-link:active {
+            transform: translateY(0);
+        }
+
+        .service-link[data-text-position="row"] {
+            flex-direction: row;
+            gap: var(--text-icon-gap);
+        }
+
+        .service-link[data-text-position="column"] {
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: var(--text-icon-gap);
+        }
+
+        .service-icon {
+            width: 100%;
+            height: auto;
+            max-width: var(--icon-size);
+            max-height: var(--icon-size);
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .service-name {
+            font-size: var(--text-size);
+            color: var(--text-color);
+            word-break: break-all;
+        }
+
+        /* 设置模态框动画 */
+        #settings-modal {
+            transition: opacity 0.3s ease;
+        }
+
+        #settings-modal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-8">
+    <div class="mx-auto">
+        <div id="services-container" class="space-y-8">
+            <!-- Services will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Settings Button -->
+    <button id="settings-btn" class="fixed bottom-6 right-6 bg-white/80 backdrop-blur p-3 rounded-full shadow-lg hover:bg-gray-100">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+    </button>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-[480px] max-w-[90%] max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-semibold mb-4">设置</h3>
+            <div class="space-y-6">
+                <!-- Background Image Section -->
+                <div class="space-y-4">
+                    <h4 class="font-medium">背景片</h4>
+                    <input type="file" id="bg-upload" accept="image/*" class="w-full">
+                    <button id="reset-bg" class="w-full py-2 text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors">
+                        重置背景
+                    </button>
+                </div>
+
+                <!-- Icon Settings Section -->
+                <div class="space-y-4">
+                    <h4 class="font-medium">图标设置</h4>
+                    
+                    <div class="slider-container">
+                        <label>图标大小</label>
+                        <input type="range" id="icon-size" min="48" max="120" value="80">
+                        <span id="icon-size-value">80px</span>
+                    </div>
+
+                    <div class="slider-container">
+                        <label>图标圆角</label>
+                        <input type="range" id="icon-radius" min="0" max="24" value="12">
+                        <span id="icon-radius-value">12px</span>
+                    </div>
+
+                    <div class="slider-container">
+                        <label>不透明度</label>
+                        <input type="range" id="icon-opacity" min="0" max="100" value="100">
+                        <span id="icon-opacity-value">100%</span>
+                    </div>
+
+                    <div class="slider-container">
+                        <label>图标间距</label>
+                        <input type="range" id="icon-gap" min="8" max="48" value="12">
+                        <span id="icon-gap-value">12px</span>
+                    </div>
+                </div>
+
+                <!-- Text Settings Section -->
+                <div class="space-y-4">
+                    <h4 class="font-medium">文字设置</h4>
+                    
+                    <div class="flex items-center justify-between">
+                        <label>显示图标名称</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-names" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <label>文字位置</label>
+                        <select id="text-position" class="px-3 py-1 border rounded">
+                            <option value="row">右侧</option>
+                            <option value="column">下</option>
+                        </select>
+                    </div>
+
+                    <div class="slider-container">
+                        <label>文字大小</label>
+                        <input type="range" id="text-size" min="12" max="24" value="18">
+                        <span id="text-size-value">18px</span>
+                    </div>
+
+                    <div class="slider-container">
+                        <label>文字间距</label>
+                        <input type="range" id="text-icon-gap" min="4" max="24" value="12">
+                        <span id="text-icon-gap-value">12px</span>
+                    </div>
+
+                    <div>
+                        <label class="block mb-2">文字颜色</label>
+                        <div class="flex items-center gap-4 mb-2">
+                            <input type="text" id="custom-color" class="color-input" placeholder="#000000" 
+                                   pattern="^#[0-9A-Fa-f]{6}$" title="请输入有效的十六进制颜色值">
+                            <button id="apply-color" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                应用
+                            </button>
+                        </div>
+                        <div class="flex gap-2" id="color-picker">
+                            <div class="color-option selected" style="background-color: #1a1a1a" data-color="#1a1a1a"></div>
+                            <div class="color-option" style="background-color: #ffffff" data-color="#ffffff"></div>
+                            <div class="color-option" style="background-color: #4CAF50" data-color="#4CAF50"></div>
+                            <div class="color-option" style="background-color: #2196F3" data-color="#2196F3"></div>
+                            <div class="color-option" style="background-color: #9C27B0" data-color="#9C27B0"></div>
+                            <div class="color-option" style="background-color: #FFC107" data-color="#FFC107"></div>
+                            <div class="color-option" style="background-color: #FF5722" data-color="#FF5722"></div>
+                            <div class="color-option" style="background-color: #F44336" data-color="#F44336"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layout Settings Section -->
+                <div class="space-y-4">
+                    <h4 class="font-medium">布局设置</h4>
+                    
+                    <div class="slider-container">
+                        <label>最大宽度</label>
+                        <input type="range" id="max-width" min="800" max="1920" value="1421">
+                        <span id="max-width-value">1421px</span>
+                    </div>
+
+                    <button id="reset-all" class="w-full py-2 bg-red-50 text-red-600 rounded hover:bg-red-100">
+                        重置设置
+                    </button>
+                </div>
+
+                <!-- Grid Settings Section -->
+                <div class="space-y-4">
+                    <h4 class="font-medium">网格设置</h4>
+                    
+                    <div class="slider-container">
+                        <label>每行图标数</label>
+                        <input type="range" id="grid-columns" min="1" max="12" value="6">
+                        <span id="grid-columns-value">6</span>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button id="close-settings" class="text-gray-600">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IndexDB setup
+        let db;
+        const dbName = "navigationDB";
+        const request = indexedDB.open(dbName, 1);
+
+        request.onerror = (event) => {
+            console.error("Database error:", event.target.error);
+        };
+
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            if (!db.objectStoreNames.contains("settings")) {
+                db.createObjectStore("settings");
+            }
+        };
+
+        request.onsuccess = (event) => {
+            db = event.target.result;
+            loadSettings();
+        };
+
+        // Load all settings from IndexDB
+        function loadSettings() {
+            const transaction = db.transaction(["settings"], "readonly");
+            const store = transaction.objectStore("settings");
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const settings = request.result;
+                if (settings) {
+                    // Apply background image if exists
+                    if (settings.backgroundImage) {
+                        document.body.style.backgroundImage = `url(${settings.backgroundImage})`;
+                        document.body.classList.add('custom-bg');
+                    }
+
+                    // Apply other settings if they exist
+                    if (settings.iconSize) document.documentElement.style.setProperty('--icon-size', settings.iconSize + 'px');
+                    if (settings.iconRadius) document.documentElement.style.setProperty('--icon-radius', settings.iconRadius + 'px');
+                    if (settings.iconOpacity) document.documentElement.style.setProperty('--icon-opacity', settings.iconOpacity);
+                    if (settings.iconGap) document.documentElement.style.setProperty('--icon-gap', settings.iconGap + 'px');
+                    if (settings.textSize) document.documentElement.style.setProperty('--text-size', settings.textSize + 'px');
+                    if (settings.textColor) document.documentElement.style.setProperty('--text-color', settings.textColor);
+                    if (settings.maxWidth) document.documentElement.style.setProperty('--max-width', settings.maxWidth + 'px');
+                    if (settings.textIconGap) document.documentElement.style.setProperty('--text-icon-gap', settings.textIconGap + 'px');
+                    if (settings.textPosition) {
+                        document.documentElement.style.setProperty('--text-position', settings.textPosition);
+                        $('.service-link').attr('data-text-position', settings.textPosition);
+                    }
+                    if (settings.gridColumns) document.documentElement.style.setProperty('--grid-columns', settings.gridColumns);
+                    
+                    // Update input values
+                    $('#icon-size').val(settings.iconSize || 80);
+                    $('#icon-radius').val(settings.iconRadius || 12);
+                    $('#icon-opacity').val((settings.iconOpacity || 1) * 100);
+                    $('#icon-gap').val(settings.iconGap || 12);
+                    $('#text-size').val(settings.textSize || 18);
+                    $('#text-icon-gap').val(settings.textIconGap || 12);
+                    $('#max-width').val(settings.maxWidth || 1421);
+                    $('#show-names').prop('checked', settings.showNames !== false);
+                    $('#text-position').val(settings.textPosition || 'row');
+                    $('#grid-columns').val(settings.gridColumns || 6);
+                    
+                    // Update display values
+                    updateDisplayValues();
+                    updateCategoryColor();
+                }
+            };
+        }
+
+        // Save a single setting to IndexDB
+        function saveSetting(key, value) {
+            const transaction = db.transaction(["settings"], "readwrite");
+            const store = transaction.objectStore("settings");
+            store.put(value, key);
+        }
+
+        // Update all display values
+        function updateDisplayValues() {
+            $('#icon-size-value').text($('#icon-size').val() + 'px');
+            $('#icon-radius-value').text($('#icon-radius').val() + 'px');
+            $('#icon-opacity-value').text($('#icon-opacity').val() + '%');
+            $('#icon-gap-value').text($('#icon-gap').val() + 'px');
+            $('#text-size-value').text($('#text-size').val() + 'px');
+            $('#text-icon-gap-value').text($('#text-icon-gap').val() + 'px');
+            $('#max-width-value').text($('#max-width').val() + 'px');
+            $('#grid-columns-value').text($('#grid-columns').val());
+        }
+
+        function updateCategoryColor() {
+            const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
+            $('.category-section h2').css('color', textColor);
+        }
+
+        // ��� document.ready 前添加性能优化相关代码
+        // 延迟加载非关键资源
+        function loadDeferredStyles() {
+            const addStylesNode = document.getElementById('deferred-styles');
+            const replacement = document.createElement('div');
+            replacement.innerHTML = addStylesNode.textContent;
+            document.body.appendChild(replacement);
+            addStylesNode.parentElement.removeChild(addStylesNode);
+        }
+
+        // 优化图片加载
+        function lazyLoadImages() {
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.classList.remove('lazy');
+                        observer.unobserve(img);
+                    }
+                });
+            });
+
+            document.querySelectorAll('img.lazy').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+
+        // 优化 services.json 加载
+        function loadServices() {
+            const cachedData = localStorage.getItem('servicesCache');
+            const cacheTimestamp = localStorage.getItem('servicesCacheTimestamp');
+            const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : Infinity;
+            const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
+
+            if (cachedData && cacheAge < cacheMaxAge) {
+                renderServices(JSON.parse(cachedData));
+                return;
+            }
+
+            $.getJSON('services.json', function(data) {
+                localStorage.setItem('servicesCache', JSON.stringify(data));
+                localStorage.setItem('servicesCacheTimestamp', Date.now().toString());
+                renderServices(data);
+            }).fail(handleLoadError);
+        }
+
+        // 优化渲染函数
+        function renderServices(data) {
+            const container = $('#services-container');
+            container.empty();
+            
+            // 使用 DocumentFragment 优化 DOM 操作
+            const fragment = document.createDocumentFragment();
+            
+            data.forEach(category => {
+                const categoryElement = document.createElement('div');
+                categoryElement.className = 'category-section';
+                categoryElement.innerHTML = `
+                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-800">
+                        <span>${category.category}</span>
+                    </h2>
+                    <div class="grid"></div>
+                `;
+                
+                const servicesGrid = categoryElement.querySelector('.grid');
+                
+                category.services.forEach(service => {
+                    const serviceElement = document.createElement('a');
+                    serviceElement.href = service.uri;
+                    serviceElement.className = 'service-link';
+                    serviceElement.setAttribute('data-text-position', $('#text-position').val() || 'row');
+                    serviceElement.setAttribute('aria-label', service.name);
+                    serviceElement.setAttribute('role', 'link');
+                    
+                    serviceElement.innerHTML = `
+                        <img data-src="${service.icon}" 
+                             alt="${service.name}" 
+                             class="service-icon lazy"
+                             src="/icons/default.png">
+                        <span class="service-name">${service.name}</span>
+                    `;
+                    
+                    servicesGrid.appendChild(serviceElement);
+                });
+                
+                fragment.appendChild(categoryElement);
+            });
+            
+            container.append(fragment);
+            lazyLoadImages();
+        }
+
+        // 错误处理函数
+        function handleLoadError(jqXHR, textStatus, errorThrown) {
+            console.error('Failed to load services:', errorThrown);
+            $('#services-container').html(`
+                <div class="text-center text-red-500 py-8">
+                    <p>加载失败</p>
+                    <button onclick="loadServices()" class="mt-4 px-4 py-2 bg-red-100 rounded">
+                        重试
+                    </button>
+                </div>
+            `);
+        }
+
+        // 在 document.ready 中使用优化后的加载函数
+        $(document).ready(function() {
+            // Settings modal handlers
+            $('#settings-btn').click(() => $('#settings-modal').removeClass('hidden'));
+            $('#close-settings').click(() => $('#settings-modal').addClass('hidden'));
+
+            // Icon size handler
+            $('#icon-size').on('input', function() {
+                const value = $(this).val();
+                document.documentElement.style.setProperty('--icon-size', value + 'px');
+                $('#icon-size-value').text(value + 'px');
+                saveSetting('iconSize', parseInt(value));
+            });
+
+            // Icon radius handler
+            $('#icon-radius').on('input', function() {
+                const value = $(this).val();
+                document.documentElement.style.setProperty('--icon-radius', value + 'px');
+                $('#icon-radius-value').text(value + 'px');
+                saveSetting('iconRadius', parseInt(value));
+            });
+
+            // Icon opacity handler
+            $('#icon-opacity').on('input', function() {
+                const value = $(this).val() / 100;
+                document.documentElement.style.setProperty('--icon-opacity', value);
+                $('#icon-opacity-value').text($(this).val() + '%');
+                saveSetting('iconOpacity', value);
+            });
+
+            // Icon gap handler
+            $('#icon-gap').on('input', function() {
+                const value = $(this).val();
+                document.documentElement.style.setProperty('--icon-gap', value + 'px');
+                $('#icon-gap-value').text(value + 'px');
+                saveSetting('iconGap', parseInt(value));
+            });
+
+            // Text size handler
+            $('#text-size').on('input', function() {
+                const value = $(this).val();
+                document.documentElement.style.setProperty('--text-size', value + 'px');
+                $('#text-size-value').text(value + 'px');
+                saveSetting('textSize', parseInt(value));
+            });
+
+            // Show names handler
+            $('#show-names').change(function() {
+                const checked = $(this).prop('checked');
+                $('.service-name').toggle(checked);
+                saveSetting('showNames', checked);
+            });
+
+            // Custom color input handler
+            $('#apply-color').click(function() {
+                const colorInput = $('#custom-color');
+                const color = colorInput.val();
+                
+                // Validate hex color format
+                if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                    $('.color-option').removeClass('selected');
+                    document.documentElement.style.setProperty('--text-color', color);
+                    saveSetting('textColor', color);
+                    colorInput.removeClass('border-red-500');
+                    updateCategoryColor();
+                } else {
+                    colorInput.addClass('border-red-500');
+                }
+            });
+
+            // Color picker handler
+            $('.color-option').click(function() {
+                $('.color-option').removeClass('selected');
+                $(this).addClass('selected');
+                const color = $(this).data('color');
+                document.documentElement.style.setProperty('--text-color', color);
+                saveSetting('textColor', color);
+                $('#custom-color').val(color);
+                updateCategoryColor();
+            });
+
+            // Max width handler
+            $('#max-width').on('input', function() {
+                const value = $(this).val();
+                document.documentElement.style.setProperty('--max-width', value + 'px');
+                $('#max-width-value').text(value + 'px');
+                saveSetting('maxWidth', parseInt(value));
+            });
+
+            // Background image handler
+            $('#bg-upload').change(function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const base64Image = e.target.result;
+                        document.body.style.backgroundImage = `url(${base64Image})`;
+                        document.body.classList.add('custom-bg');
+                        saveSetting('backgroundImage', base64Image);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Reset background handler
+            $('#reset-bg').click(function() {
+                document.body.style.backgroundImage = '';
+                document.body.classList.remove('custom-bg');
+                saveSetting('backgroundImage', null);
+            });
+
+            // Text position handler
+            $('#text-position').change(function() {
+                const value = $(this).val();
+                $('.service-link').attr('data-text-position', value);
+                document.documentElement.style.setProperty('--text-position', value);
+                saveSetting('textPosition', value);
+            });
+
+            // Text-icon gap handler
+            $('#text-icon-gap').on('input', function() {
+                const value = $(this).val();
+                document.documentElement.style.setProperty('--text-icon-gap', value + 'px');
+                $('#text-icon-gap-value').text(value + 'px');
+                saveSetting('textIconGap', parseInt(value));
+            });
+
+            // Grid columns handler
+            $('#grid-columns').on('input', function() {
+                const value = $(this).val();
+                document.documentElement.style.setProperty('--grid-columns', value);
+                $('#grid-columns-value').text(value);
+                saveSetting('gridColumns', parseInt(value));
+            });
+
+            // Reset all handler
+            $('#reset-all').click(function() {
+                const defaultSettings = {
+                    iconSize: 80,
+                    iconRadius: 12,
+                    iconOpacity: 1,
+                    iconGap: 12,
+                    textSize: 18,
+                    textColor: '#1a1a1a',
+                    maxWidth: 1421,
+                    showNames: true,
+                    textIconGap: 12,
+                    textPosition: 'row',
+                    backgroundImage: null,
+                    gridColumns: 6
+                };
+
+                // 先清除所有设置
+                const transaction = db.transaction(["settings"], "readwrite");
+                const store = transaction.objectStore("settings");
+                store.clear();
+
+                // 重新应用默认设置
+                Object.entries(defaultSettings).forEach(([key, value]) => {
+                    saveSetting(key, value);
+                });
+
+                // 更新 UI
+                document.documentElement.style.setProperty('--icon-size', '80px');
+                document.documentElement.style.setProperty('--icon-radius', '12px');
+                document.documentElement.style.setProperty('--icon-opacity', '1');
+                document.documentElement.style.setProperty('--icon-gap', '12px');
+                document.documentElement.style.setProperty('--text-size', '18px');
+                document.documentElement.style.setProperty('--text-color', '#1a1a1a');
+                document.documentElement.style.setProperty('--max-width', '1421px');
+                document.documentElement.style.setProperty('--text-icon-gap', '12px');
+                document.documentElement.style.setProperty('--text-position', 'row');
+                document.documentElement.style.setProperty('--grid-columns', '6');
+
+                // 重置背景
+                document.body.style.backgroundImage = '';
+                document.body.classList.remove('custom-bg');
+
+                // 重置所有输入值
+                $('#icon-size').val(80);
+                $('#icon-radius').val(12);
+                $('#icon-opacity').val(100);
+                $('#icon-gap').val(12);
+                $('#text-size').val(18);
+                $('#text-icon-gap').val(12);
+                $('#max-width').val(1421);
+                $('#show-names').prop('checked', true);
+                $('#text-position').val('row');
+                $('.service-link').attr('data-text-position', 'row');
+                $('.color-option').removeClass('selected');
+                $('.color-option[data-color="#1a1a1a"]').addClass('selected');
+                $('#custom-color').val('#1a1a1a');
+                $('#grid-columns').val(6);
+
+                // 更新显示值
+                updateDisplayValues();
+                updateCategoryColor();
+
+                // 重新加载页面以确保所有设置都被正确应用
+                window.location.reload();
+            });
+
+            // Load services from JSON file
+            loadServices();
+        });
+
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
+

@@ -138,6 +138,11 @@
 		"category": "🍀 服务",
 		"services": [
 			{
+				"name": "Miniflux",
+				"uri": "https://miniflux.xizero.com/",
+				"icon": "/icons/miniflux.png"
+			},
+			{
 				"name": "Nexflux",
 				"uri": "https://rss.xizero.com/",
 				"icon": "/icons/Nexflux.png"

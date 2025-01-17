@@ -133,5 +133,25 @@
 				"icon": "/icons/emoji.png"
 			}
 		]
+	},
+	{
+		"category": "🍀 服务",
+		"services": [
+			{
+				"name": "Nexflux",
+				"uri": "https://rss.xizero.com/",
+				"icon": "/icons/Nexflux.png"
+			},
+			{
+				"name": "Linux do",
+				"uri": "https://linux.do/",
+				"icon": "/icons/linuxdo.webp"
+			},
+			{
+				"name": "NodeSeek",
+				"uri": "https://www.nodeseek.com/",
+				"icon": "/icons/nodeseek.png"
+			}
+		]
 	}
 ]

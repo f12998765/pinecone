@@ -41,7 +41,7 @@
 				"name": "NewNow",
 				"uri": "https://newsnow.busiyi.world/c/focus",
 				"icon": "/icons/dbzdk.png"
-			},
+			}
 		]
 	},
 	{
@@ -161,7 +161,7 @@
 				"name": "Github",
 				"uri": "https://www.github.com/",
 				"icon": "/icons/github.png"
-			},
+			}
 		]
 	}
 ]

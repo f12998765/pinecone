@@ -93,6 +93,11 @@
 		"category": "⚡️ 工具",
 		"services": [
 			{
+				"name": "DeepSeek",
+				"uri": "https://chat.deepseek.com/",
+				"icon": "/icons/deepseek.png"
+			},
+			{
 				"name": "DuckDuckGo AI",
 				"uri": "https://duckduckgo.com/?q=DuckDuckGo+AI+Chat&ia=chat&duckai=1",
 				"icon": "/icons/duckduckgo.png"
@@ -126,11 +131,6 @@
 				"name": "临时邮箱",
 				"uri": "https://www.emailtick.com/zh",
 				"icon": "/icons/tempemail.png"
-			},
-			{
-				"name": "Emoji",
-				"uri": "https://emojipedia.org/",
-				"icon": "/icons/emoji.png"
 			}
 		]
 	},

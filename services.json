@@ -13,9 +13,9 @@
 				"icon": "/icons/twitter.png"
 			},
 			{
-				"name": "Follow",
-				"uri": "https://app.follow.is/",
-				"icon": "/icons/follow.png"
+				"name": "inoreader",
+				"uri": "https://www.inoreader.com/all_articles",
+				"icon": "/icons/inoreader.png"
 			},
 			{
 				"name": "Hacker News",
@@ -33,9 +33,9 @@
 				"icon": "/icons/ns.png"
 			},
 			{
-				"name": "电报值得看",
-				"uri": "https://dbzdk.com/",
-				"icon": "/icons/dbzdk.png"
+				"name": "雀魂",
+				"uri": "https://game.maj-soul.com/1/",
+				"icon": "/icons/maj.png"
 			},
 			{
 				"name": "NewNow",

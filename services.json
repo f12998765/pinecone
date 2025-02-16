@@ -4,7 +4,7 @@
 		"services": [
 			{
 				"name": "青空",
-				"uri": "https://main.elk.zone/home",
+				"uri": "https://phanpy.social",
 				"icon": "/icons/sky.jpg"
 			},
 			{
@@ -38,9 +38,9 @@
 				"icon": "/icons/maj.png"
 			},
 			{
-				"name": "NewNow",
-				"uri": "https://newsnow.busiyi.world/c/focus",
-				"icon": "/icons/newsnow.png"
+				"name": "reddit",
+				"uri": "https://www.reddit.com/",
+				"icon": "/icons/reddit.png"
 			}
 		]
 	},
@@ -151,11 +151,6 @@
 				"name": "NodeSeek",
 				"uri": "https://www.nodeseek.com/",
 				"icon": "/icons/nodeseek.png"
-			},
-			{
-				"name": "reddit",
-				"uri": "https://www.reddit.com/",
-				"icon": "/icons/reddit.png"
 			},
 			{
 				"name": "Github",

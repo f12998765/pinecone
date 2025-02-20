@@ -156,6 +156,11 @@
 				"name": "Github",
 				"uri": "https://www.github.com/",
 				"icon": "/icons/github.png"
+			},
+			{
+				"name": "Bangumi",
+				"uri": "https://bgm.tv/",
+				"icon": "/icons/bgmtv.png"
 			}
 		]
 	}

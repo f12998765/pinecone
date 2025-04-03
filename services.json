@@ -13,9 +13,9 @@
 				"icon": "/icons/twitter.png"
 			},
 			{
-				"name": "inoreader",
-				"uri": "https://www.inoreader.com/all_articles",
-				"icon": "/icons/inoreader.png"
+				"name": "Folo",
+				"uri": "https://app.follow.is/",
+				"icon": "/icons/folo.png"
 			},
 			{
 				"name": "Hacker News",
@@ -33,14 +33,14 @@
 				"icon": "/icons/ns.png"
 			},
 			{
-				"name": "雀魂",
-				"uri": "https://game.maj-soul.com/1/",
-				"icon": "/icons/maj.png"
-			},
-			{
 				"name": "reddit",
 				"uri": "https://www.reddit.com/",
 				"icon": "/icons/reddit.png"
+			},
+			{
+				"name": "Raindrop",
+				"uri": "https://app.raindrop.io/my/0",
+				"icon": "/icons/raindrop.png"
 			}
 		]
 	},
@@ -63,9 +63,9 @@
 				"icon": "/icons/redbook.png"
 			},
 			{
-				"name": "即刻",
-				"uri": "https://web.okjike.com/",
-				"icon": "/icons/jike.png"
+				"name": "NGA",
+				"uri": "https://nga.178.com/",
+				"icon": "/icons/nga.png"
 			},
 			{
 				"name": "Youtbe",
@@ -118,9 +118,9 @@
 				"icon": "/icons/translate.png"
 			},
 			{
-				"name": "OutLook",
-				"uri": "https://outlook.live.com/mail/0/",
-				"icon": "/icons/outlook.png"
+				"name": "Gmail",
+				"uri": "https://mail.google.com/mail/u/0/#inbox",
+				"icon": "/icons/gmail.png"
 			},
 			{
 				"name": "OneDrive",

@@ -103,6 +103,11 @@
 				"icon": "/icons/duckduckgo.png"
 			},
 			{
+				"name": "Microsoft Copilot",
+				"uri": "https://copilot.microsoft.com/",
+				"icon": "/icons/copilot-color.svg"
+			},
+			{
 				"name": "Gemini",
 				"uri": "https://gemini.google.com/app",
 				"icon": "/icons/gemini.png"
@@ -111,11 +116,6 @@
 				"name": "Google Keep",
 				"uri": "https://keep.google.com/",
 				"icon": "/icons/keep.png"
-			},
-			{
-				"name": "Google 翻译",
-				"uri": "https://translate.google.com/",
-				"icon": "/icons/translate.png"
 			},
 			{
 				"name": "Gmail",

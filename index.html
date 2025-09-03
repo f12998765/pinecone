@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,7 +56,7 @@
             border-radius: var(--icon-radius);
             opacity: var(--icon-opacity);
         }
-        
+
         .service-name {
             font-size: var(--text-size);
             color: var(--text-color);
@@ -150,11 +151,11 @@
             border-radius: 50%;
         }
 
-        input:checked + .slider {
+        input:checked+.slider {
             background-color: #2196F3;
         }
 
-        input:checked + .slider:before {
+        input:checked+.slider:before {
             transform: translateX(26px);
         }
 
@@ -165,8 +166,9 @@
             border-radius: 4px;
             font-family: monospace;
         }
-        
+
         @media (max-width: 640px) {
+
             /* 移动端图标和间距调整 */
             :root {
                 --icon-size: 40px;
@@ -306,6 +308,7 @@
         }
     </style>
 </head>
+
 <body class="bg-gray-50 min-h-screen p-4 md:p-8">
     <div class="mx-auto">
         <div id="services-container" class="space-y-8">
@@ -314,10 +317,13 @@
     </div>
 
     <!-- Settings Button -->
-    <button id="settings-btn" class="fixed bottom-6 right-6 bg-white/80 backdrop-blur p-3 rounded-full shadow-lg hover:bg-gray-100">
+    <button id="settings-btn"
+        class="fixed bottom-6 right-6 bg-white/80 backdrop-blur p-3 rounded-full shadow-lg hover:bg-gray-100">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
     </button>
 
@@ -330,7 +336,8 @@
                 <div class="space-y-4">
                     <h4 class="font-medium">背景片</h4>
                     <input type="file" id="bg-upload" accept="image/*" class="w-full">
-                    <button id="reset-bg" class="w-full py-2 text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors">
+                    <button id="reset-bg"
+                        class="w-full py-2 text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors">
                         重置背景
                     </button>
                 </div>
@@ -338,7 +345,7 @@
                 <!-- Icon Settings Section -->
                 <div class="space-y-4">
                     <h4 class="font-medium">图标设置</h4>
-                    
+
                     <div class="slider-container">
                         <label>图标大小</label>
                         <input type="range" id="icon-size" min="48" max="120" value="80">
@@ -367,7 +374,7 @@
                 <!-- Text Settings Section -->
                 <div class="space-y-4">
                     <h4 class="font-medium">文字设置</h4>
-                    
+
                     <div class="flex items-center justify-between">
                         <label>显示图标名称</label>
                         <label class="switch">
@@ -399,14 +406,15 @@
                     <div>
                         <label class="block mb-2">文字颜色</label>
                         <div class="flex items-center gap-4 mb-2">
-                            <input type="text" id="custom-color" class="color-input" placeholder="#000000" 
-                                   pattern="^#[0-9A-Fa-f]{6}$" title="请输入有效的十六进制颜色值">
+                            <input type="text" id="custom-color" class="color-input" placeholder="#000000"
+                                pattern="^#[0-9A-Fa-f]{6}$" title="请输入有效的十六进制颜色值">
                             <button id="apply-color" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
                                 应用
                             </button>
                         </div>
                         <div class="flex gap-2" id="color-picker">
-                            <div class="color-option selected" style="background-color: #1a1a1a" data-color="#1a1a1a"></div>
+                            <div class="color-option selected" style="background-color: #1a1a1a" data-color="#1a1a1a">
+                            </div>
                             <div class="color-option" style="background-color: #ffffff" data-color="#ffffff"></div>
                             <div class="color-option" style="background-color: #4CAF50" data-color="#4CAF50"></div>
                             <div class="color-option" style="background-color: #2196F3" data-color="#2196F3"></div>
@@ -421,7 +429,7 @@
                 <!-- Layout Settings Section -->
                 <div class="space-y-4">
                     <h4 class="font-medium">布局设置</h4>
-                    
+
                     <div class="slider-container">
                         <label>最大宽度</label>
                         <input type="range" id="max-width" min="800" max="1920" value="1421">
@@ -432,7 +440,7 @@
                 <!-- Grid Settings Section -->
                 <div class="space-y-4">
                     <h4 class="font-medium">网格设置</h4>
-                    
+
                     <div class="slider-container">
                         <label>每行图标数</label>
                         <input type="range" id="grid-columns" min="1" max="12" value="6">
@@ -525,7 +533,7 @@
 
         // 新增 applySetting 函数来处理单个设置的应用
         function applySetting(key, value) {
-            switch(key) {
+            switch (key) {
                 case 'backgroundImage':
                     if (value) {
                         document.body.style.backgroundImage = `url(${value})`;
@@ -588,12 +596,12 @@
                 const transaction = db.transaction(["settings"], "readwrite");
                 const store = transaction.objectStore("settings");
                 const request = store.put(value, key);
-                
+
                 request.onsuccess = () => {
                     console.log(`保存设置成功: ${key} = ${value}`);
                     resolve();
                 };
-                
+
                 request.onerror = () => {
                     console.error(`保存设置失败: ${key}`);
                     reject(request.error);
@@ -658,7 +666,7 @@
                 return;
             }
 
-            $.getJSON('services.json', function(data) {
+            $.getJSON('services.json', function (data) {
                 localStorage.setItem('servicesCache', JSON.stringify(data));
                 localStorage.setItem('servicesCacheTimestamp', Date.now().toString());
                 renderServices(data);
@@ -669,10 +677,10 @@
         function renderServices(data) {
             const container = $('#services-container');
             container.empty();
-            
+
             // 使用 DocumentFragment 优化 DOM 操作
             const fragment = document.createDocumentFragment();
-            
+
             data.forEach(category => {
                 const categoryElement = document.createElement('div');
                 categoryElement.className = 'category-section';
@@ -682,9 +690,9 @@
                     </h2>
                     <div class="grid"></div>
                 `;
-                
+
                 const servicesGrid = categoryElement.querySelector('.grid');
-                
+
                 category.services.forEach(service => {
                     const serviceElement = document.createElement('a');
                     serviceElement.href = service.uri;
@@ -692,7 +700,7 @@
                     serviceElement.setAttribute('data-text-position', $('#text-position').val() || 'row');
                     serviceElement.setAttribute('aria-label', service.name);
                     serviceElement.setAttribute('role', 'link');
-                    
+
                     serviceElement.innerHTML = `
                         <img data-src="${service.icon}" 
                              alt="${service.name}" 
@@ -700,13 +708,13 @@
                              src="/icons/sky.png">
                         <span class="service-name">${service.name}</span>
                     `;
-                    
+
                     servicesGrid.appendChild(serviceElement);
                 });
-                
+
                 fragment.appendChild(categoryElement);
             });
-            
+
             container.append(fragment);
             lazyLoadImages();
         }
@@ -725,13 +733,13 @@
         }
 
         // 在 document.ready 中使用优化后的加载函数
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Settings modal handlers
             $('#settings-btn').click(() => $('#settings-modal').removeClass('hidden'));
             $('#close-settings').click(() => $('#settings-modal').addClass('hidden'));
 
             // Icon size handler
-            $('#icon-size').on('input', function() {
+            $('#icon-size').on('input', function () {
                 const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--icon-size', value + 'px');
                 $('#icon-size-value').text(value + 'px');
@@ -741,7 +749,7 @@
             });
 
             // Icon radius handler
-            $('#icon-radius').on('input', function() {
+            $('#icon-radius').on('input', function () {
                 const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--icon-radius', value + 'px');
                 $('#icon-radius-value').text(value + 'px');
@@ -751,7 +759,7 @@
             });
 
             // Icon opacity handler
-            $('#icon-opacity').on('input', function() {
+            $('#icon-opacity').on('input', function () {
                 const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--icon-opacity', value / 100);
                 $('#icon-opacity-value').text(value + '%');
@@ -761,7 +769,7 @@
             });
 
             // Icon gap handler
-            $('#icon-gap').on('input', function() {
+            $('#icon-gap').on('input', function () {
                 const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--icon-gap', value + 'px');
                 $('#icon-gap-value').text(value + 'px');
@@ -771,7 +779,7 @@
             });
 
             // Text size handler
-            $('#text-size').on('input', function() {
+            $('#text-size').on('input', function () {
                 const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--text-size', value + 'px');
                 $('#text-size-value').text(value + 'px');
@@ -781,7 +789,7 @@
             });
 
             // Show names handler
-            $('#show-names').change(function() {
+            $('#show-names').change(function () {
                 const value = $(this).prop('checked');
                 $('.service-name').toggle(value);
                 saveSetting('showNames', value).catch(error => {
@@ -790,10 +798,10 @@
             });
 
             // Custom color input handler
-            $('#apply-color').click(function() {
+            $('#apply-color').click(function () {
                 const colorInput = $('#custom-color');
                 const color = colorInput.val();
-                
+
                 // Validate hex color format
                 if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
                     $('.color-option').removeClass('selected');
@@ -809,7 +817,7 @@
             });
 
             // Color picker handler
-            $('.color-option').click(function() {
+            $('.color-option').click(function () {
                 $('.color-option').removeClass('selected');
                 $(this).addClass('selected');
                 const color = $(this).data('color');
@@ -822,7 +830,7 @@
             });
 
             // Max width handler
-            $('#max-width').on('input', function() {
+            $('#max-width').on('input', function () {
                 const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--max-width', value + 'px');
                 $('#max-width-value').text(value + 'px');
@@ -832,11 +840,11 @@
             });
 
             // Background image handler
-            $('#bg-upload').change(function(e) {
+            $('#bg-upload').change(function (e) {
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         const base64Image = e.target.result;
                         document.body.style.backgroundImage = `url(${base64Image})`;
                         document.body.classList.add('custom-bg');
@@ -849,7 +857,7 @@
             });
 
             // Reset background handler
-            $('#reset-bg').click(function() {
+            $('#reset-bg').click(function () {
                 document.body.style.backgroundImage = '';
                 document.body.classList.remove('custom-bg');
                 saveSetting('backgroundImage', null).catch(error => {
@@ -858,7 +866,7 @@
             });
 
             // Text position handler
-            $('#text-position').change(function() {
+            $('#text-position').change(function () {
                 const value = $(this).val();
                 $('.service-link').attr('data-text-position', value);
                 document.documentElement.style.setProperty('--text-position', value);
@@ -868,7 +876,7 @@
             });
 
             // Text-icon gap handler
-            $('#text-icon-gap').on('input', function() {
+            $('#text-icon-gap').on('input', function () {
                 const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--text-icon-gap', value + 'px');
                 $('#text-icon-gap-value').text(value + 'px');
@@ -878,7 +886,7 @@
             });
 
             // Grid columns handler
-            $('#grid-columns').on('input', function() {
+            $('#grid-columns').on('input', function () {
                 const value = parseInt($(this).val());
                 document.documentElement.style.setProperty('--grid-columns', value);
                 $('#grid-columns-value').text(value);
@@ -888,7 +896,7 @@
             });
 
             // Reset all handler
-            $('#reset-all').click(function() {
+            $('#reset-all').click(function () {
                 // 先清除所有设置
                 const transaction = db.transaction(["settings"], "readwrite");
                 const store = transaction.objectStore("settings");
@@ -915,7 +923,7 @@
             loadServices();
 
             // 点击模态框背景关闭设置
-            $('#settings-modal').click(function(e) {
+            $('#settings-modal').click(function (e) {
                 // 只有当点击的是模态框背景时才关闭
                 if (e.target === this) {
                     $(this).addClass('hidden');
@@ -923,23 +931,39 @@
             });
 
             // 按 ESC 键关闭设置
-            $(document).keydown(function(e) {
+            $(document).keydown(function (e) {
                 if (e.key === 'Escape') {
                     $('#settings-modal').addClass('hidden');
                 }
             });
         });
-
-        // Service Worker Registration for PWA
+    </script>
+    <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }, function(err) {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
+            navigator.serviceWorker.register('/service-worker.js').then(registration => {
+                console.log('ServiceWorker 注册成功，作用域:', registration.scope);
+
+                // 监听新版本的出现
+                registration.onupdatefound = () => {
+                    const newWorker = registration.installing;
+                    if (newWorker) {
+                        newWorker.onstatechange = () => {
+                            // 当新 SW 安装完成且已有旧 SW 控制页面时
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('检测到新版本 Service Worker');
+                                // 这里可以弹出提示框，让用户选择刷新
+                                if (confirm('有新版本可用，是否立即刷新页面？')) {
+                                    window.location.reload();
+                                }
+                            }
+                        };
+                    }
+                };
+            }).catch(err => {
+                console.error('ServiceWorker 注册失败:', err);
             });
         }
     </script>
 </body>
+
 </html>

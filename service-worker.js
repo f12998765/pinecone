@@ -1,33 +1,95 @@
-const CACHE_NAME = 'navigation-panel-v1';
-const urlsToCache = [
-  '/',
+const STATIC_CACHE = 'pinecone-static-v1';
+const DATA_CACHE = 'pinecone-data-v1';
+
+// 预缓存的静态资源（核心文件 + services.json）
+const STATIC_ASSETS = [
+  '/', // 根页面
   '/index.html',
-  '/services.json',
-  '/icon-192x192.png',
-  '/icon-512x512.png',
-  'https://code.jquery.com/jquery-3.6.0.min.js',
-  'https://cdn.tailwindcss.com'
+  '/manifest.json',
+  '/favicon.ico',
+  '/favicon.svg',
+  '/apple-touch-icon.png',
+  '/favicon-96x96.png',
+  '/web-app-manifest-192x192.png',
+  '/web-app-manifest-512x512.png',
+  '/styles.css', // 如果有 CSS
+  '/main.js',    // 如果有 JS
+  '/services.json' // 预缓存 JSON
 ];
 
-self.addEventListener('install', function(event) {
+// 安装阶段：预缓存静态资源
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(function(cache) {
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(STATIC_CACHE).then(cache => cache.addAll(STATIC_ASSETS))
   );
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', function(event) {
-  event.respondWith(
-    caches.match(event.request)
-      .then(function(response) {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      }
+// 激活阶段：清理旧缓存
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(k => k !== STATIC_CACHE && k !== DATA_CACHE)
+            .map(k => caches.delete(k))
+      )
     )
   );
+  self.clients.claim();
 });
 
+// 请求拦截
+self.addEventListener('fetch', event => {
+  const requestUrl = new URL(event.request.url);
+
+  // 针对 services.json 使用 stale-while-revalidate
+  if (requestUrl.pathname.endsWith('/services.json')) {
+    event.respondWith(
+      caches.open(DATA_CACHE).then(cache => {
+        return cache.match(event.request).then(cachedResponse => {
+          const fetchPromise = fetch(event.request).then(networkResponse => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          }).catch(() => cachedResponse);
+          return cachedResponse || fetchPromise;
+        });
+      })
+    );
+    return;
+  }
+
+  // 动态缓存 icons 文件夹
+  if (requestUrl.pathname.startsWith('/icons/')) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        return cached || fetch(event.request).then(response => {
+          return caches.open(STATIC_CACHE).then(cache => {
+            cache.put(event.request, response.clone());
+            return response;
+          });
+        });
+      })
+    );
+    return;
+  }
+
+  // 静态资源：缓存优先
+  if (STATIC_ASSETS.includes(requestUrl.pathname) || requestUrl.origin === location.origin) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        return cached || fetch(event.request).then(response => {
+          return caches.open(STATIC_CACHE).then(cache => {
+            cache.put(event.request, response.clone());
+            return response;
+          });
+        });
+      })
+    );
+    return;
+  }
+
+  // 其他请求：网络优先
+  event.respondWith(
+    fetch(event.request).catch(() => caches.match(event.request))
+  );
+});

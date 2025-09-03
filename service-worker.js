@@ -1,7 +1,8 @@
+// 缓存版本号
 const STATIC_CACHE = 'pinecone-static-v1';
 const DATA_CACHE = 'pinecone-data-v1';
 
-// 预缓存的静态资源（核心文件 + services.json）
+// 预缓存的静态资源（含 services.json）
 const STATIC_ASSETS = [
   '/', // 根页面
   '/index.html',
@@ -42,15 +43,18 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
 
-  // 针对 services.json 使用 stale-while-revalidate
+  // 针对 services.json：双缓存 + SWR
   if (requestUrl.pathname.endsWith('/services.json')) {
     event.respondWith(
-      caches.open(DATA_CACHE).then(cache => {
-        return cache.match(event.request).then(cachedResponse => {
+      caches.open(DATA_CACHE).then(dataCache => {
+        return dataCache.match(event.request).then(cachedResponse => {
           const fetchPromise = fetch(event.request).then(networkResponse => {
-            cache.put(event.request, networkResponse.clone());
+            dataCache.put(event.request, networkResponse.clone());
             return networkResponse;
-          }).catch(() => cachedResponse);
+          }).catch(() => {
+            // 如果数据缓存没有，就回退到静态缓存
+            return cachedResponse || caches.match(event.request);
+          });
           return cachedResponse || fetchPromise;
         });
       })

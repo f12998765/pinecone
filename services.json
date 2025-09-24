@@ -163,5 +163,35 @@
 				"icon": "/icons/bgmtv.png"
 			}
 		]
+	},
+		{
+		"category": "🎮 游戏",
+		"services": [
+			{
+				"name": "最终幻想14",
+				"uri": "https://ff.web.sdo.com/web8/index.html#/home",
+				"icon": "/icons/ff14.webp"
+			},
+			{
+				"name": "FFXIV Wiki",
+				"uri": "https://ff14.huijiwiki.com/wiki/%E9%A6%96%E9%A1%B5",
+				"icon": "/icons/ffxiv_wiki.webp"
+			},
+			{
+				"name": "Warframe Wiki",
+				"uri": "https://warframe.huijiwiki.com/wiki/Mainpage",
+				"icon": "/icons/warframe_wiki.webp"
+			},
+			{
+				"name": "Warframe Market",
+				"uri": "https://warframe.market/zh-hans/",
+				"icon": "/icons/wm.webp"
+			},
+			{
+				"name": "Overframe",
+				"uri": "https://overframe.gg/",
+				"icon": "/icons/overframe.png"
+			}
+		]
 	}
 ]

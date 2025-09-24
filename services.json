@@ -137,6 +137,11 @@
 	{
 		"category": "🎮 游戏",
 		"services": [
+						{
+				"name": "Todo.txt",
+				"uri": "https://xizero.com/todo.txt/",
+				"icon": "/icons/todo.jpg"
+			},
 			{
 				"name": "最终幻想14",
 				"uri": "https://ff.web.sdo.com/web8/index.html#/home",

@@ -1,6 +1,6 @@
 // 缓存版本号
 const STATIC_CACHE = 'pinecone-static-v1';
-const DATA_CACHE = 'pinecone-data-v1';
+const DATA_CACHE = 'pinecone-data-v2';
 
 // 预缓存的静态资源（含 services.json）
 const STATIC_ASSETS = [

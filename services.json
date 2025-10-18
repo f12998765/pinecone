@@ -4,8 +4,13 @@
 		"services": [
 			{
 				"name": "青空",
-				"uri": "https://phanpy.social",
+				"uri": "https://main.elk.zone/",
 				"icon": "/icons/sky.jpg"
+			},
+			{
+				"name": "Link",
+				"uri": "https://link.xizero.com/",
+				"icon": "/icons/linkding.jpg"
 			},
 			{
 				"name": "Twitter",
@@ -36,11 +41,6 @@
 				"name": "reddit",
 				"uri": "https://www.reddit.com/",
 				"icon": "/icons/reddit.png"
-			},
-			{
-				"name": "Raindrop",
-				"uri": "https://app.raindrop.io/my/0",
-				"icon": "/icons/raindrop.png"
 			}
 		]
 	},
@@ -137,7 +137,7 @@
 	{
 		"category": "🎮 游戏",
 		"services": [
-						{
+			{
 				"name": "Todo.txt",
 				"uri": "https://xizero.com/todo.txt/",
 				"icon": "/icons/todo.jpg"

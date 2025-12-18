@@ -118,9 +118,9 @@
 				"icon": "/icons/keep.png"
 			},
 			{
-				"name": "Gmail",
-				"uri": "https://mail.google.com/mail/u/0/#inbox",
-				"icon": "/icons/gmail.png"
+				"name": "OutLook",
+				"uri": "https://outlook.live.com/mail/0/inbox/",
+				"icon": "/icons/outlook.png"
 			},
 			{
 				"name": "OneDrive",
@@ -153,8 +153,13 @@
 				"icon": "/icons/ffxiv_wiki.webp"
 			},
 			{
+				"name": "艾欧泽亚售楼中心",
+				"uri": "https://house.ffxiv.cyou/",
+				"icon": "/icons/ffxiv_house.png"
+			},
+			{
 				"name": "Warframe Wiki",
-				"uri": "https://warframe.huijiwiki.com/wiki/Mainpage",
+				"uri": "https://wiki.warframe.com/",
 				"icon": "/icons/warframe_wiki.webp"
 			},
 			{

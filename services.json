@@ -18,9 +18,9 @@
 				"icon": "/icons/twitter.png"
 			},
 			{
-				"name": "Folo",
-				"uri": "https://app.follow.is/",
-				"icon": "/icons/folo.png"
+				"name": "Inoreader",
+				"uri": "https://www.inoreader.com/all_articles",
+				"icon": "/icons/inoreader.png"
 			},
 			{
 				"name": "Hacker News",
@@ -38,7 +38,7 @@
 				"icon": "/icons/ns.png"
 			},
 			{
-				"name": "reddit",
+				"name": "Reddit",
 				"uri": "https://www.reddit.com/",
 				"icon": "/icons/reddit.png"
 			}
@@ -113,9 +113,9 @@
 				"icon": "/icons/gemini.png"
 			},
 			{
-				"name": "Google Keep",
-				"uri": "https://keep.google.com/",
-				"icon": "/icons/keep.png"
+				"name": "Tldraw",
+				"uri": "https://www.tldraw.com/",
+				"icon": "/icons/tldraw.png"
 			},
 			{
 				"name": "OutLook",
@@ -158,6 +158,11 @@
 				"icon": "/icons/ffxiv_house.png"
 			},
 			{
+				"name": "Warframe 中文维基",
+				"uri": "https://warframe.huijiwiki.com/wiki/Mainpage",
+				"icon": "/icons/warframe_huiji_wiki.webp"
+			},
+			{
 				"name": "Warframe Wiki",
 				"uri": "https://wiki.warframe.com/",
 				"icon": "/icons/warframe_wiki.webp"
@@ -171,11 +176,6 @@
 				"name": "Warframe 掉宝",
 				"uri": "https://warframestreams.lol/",
 				"icon": "/icons/warframestreams.png"
-			},
-			{
-				"name": "Overframe",
-				"uri": "https://overframe.gg/",
-				"icon": "/icons/overframe.png"
 			}
 		]
 	},

@@ -143,11 +143,6 @@
 				"icon": "/icons/todo.jpg"
 			},
 			{
-				"name": "最终幻想14",
-				"uri": "https://ff.web.sdo.com/web8/index.html#/home",
-				"icon": "/icons/ff14.webp"
-			},
-			{
 				"name": "FFXIV Wiki",
 				"uri": "https://ff14.huijiwiki.com/wiki/%E9%A6%96%E9%A1%B5",
 				"icon": "/icons/ffxiv_wiki.webp"
@@ -156,6 +151,11 @@
 				"name": "艾欧泽亚售楼中心",
 				"uri": "https://house.ffxiv.cyou/",
 				"icon": "/icons/ffxiv_house.png"
+			},
+			{
+				"name": "Soulframe Wiki",
+				"uri": "https://wiki.avakot.org/",
+				"icon": "/icons/soulframe_wiki.png"
 			},
 			{
 				"name": "Warframe 中文维基",

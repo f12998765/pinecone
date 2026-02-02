@@ -99,7 +99,7 @@
 			},
 			{
 				"name": "DuckDuckGo AI",
-				"uri": "https://duckduckgo.com/?q=DuckDuckGo+AI+Chat&ia=chat&duckai=1",
+				"uri": "https://duck.ai/",
 				"icon": "/icons/duckduckgo.png"
 			},
 			{

@@ -654,21 +654,11 @@
             });
         }
 
-        // 优化 services.json 加载
+        // 优化 services.json 加载（Service Worker 已处理缓存）
         function loadServices() {
-            const cachedData = localStorage.getItem('servicesCache');
-            const cacheTimestamp = localStorage.getItem('servicesCacheTimestamp');
-            const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp) : Infinity;
-            const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
-
-            if (cachedData && cacheAge < cacheMaxAge) {
-                renderServices(JSON.parse(cachedData));
-                return;
-            }
-
-            $.getJSON('services.json', function (data) {
-                localStorage.setItem('servicesCache', JSON.stringify(data));
-                localStorage.setItem('servicesCacheTimestamp', Date.now().toString());
+            // 添加时间戳防止浏览器缓存
+            const timestamp = Date.now();
+            $.getJSON(`services.json?t=${timestamp}`, function (data) {
                 renderServices(data);
             }).fail(handleLoadError);
         }
@@ -951,14 +941,31 @@
                             // 当新 SW 安装完成且已有旧 SW 控制页面时
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                                 console.log('检测到新版本 Service Worker');
-                                // 这里可以弹出提示框，让用户选择刷新
-                                if (confirm('有新版本可用，是否立即刷新页面？')) {
-                                    window.location.reload();
+                                // 提示用户有新版本可用
+                                if (confirm('检测到新版本，是否立即刷新页面以获取最新内容？')) {
+                                    // 先跳过等待，立即激活新的 Service Worker
+                                    newWorker.postMessage({ action: 'skipWaiting' });
+                                    // 等待激活后刷新页面
+                                    newWorker.addEventListener('statechange', () => {
+                                        if (newWorker.state === 'activated') {
+                                            window.location.reload();
+                                        }
+                                    });
                                 }
                             }
                         };
                     }
                 };
+
+                // 监听来自 Service Worker 的消息
+                navigator.serviceWorker.addEventListener('message', event => {
+                    if (event.data && event.data.action === 'newContentAvailable') {
+                        console.log('收到新内容可用通知');
+                        if (confirm('内容已更新，是否立即刷新页面？')) {
+                            window.location.reload();
+                        }
+                    }
+                });
             }).catch(err => {
                 console.error('ServiceWorker 注册失败:', err);
             });

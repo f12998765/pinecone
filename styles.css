@@ -1,0 +1,308 @@
+/* CSS Variables */
+:root {
+    --icon-size: 64px;
+    --icon-radius: 12px;
+    --icon-opacity: 1;
+    --icon-gap: 12px;
+    --text-size: 18px;
+    --text-color: #1a1a1a;
+    --max-width: 1421px;
+    --text-icon-gap: 12px;
+    --text-position: row;
+    --min-icon-size: 80px;
+    --grid-columns: 6;
+}
+
+/* Base Styles */
+body {
+    font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "苹方", "Hiragino Sans GB", "华文细黑", "Arial", sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Service Icon Styles */
+.service-icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    border-radius: var(--icon-radius);
+    opacity: var(--icon-opacity);
+}
+
+.service-name {
+    font-size: var(--text-size);
+    color: var(--text-color);
+}
+
+/* Settings Button */
+#settings-btn {
+    opacity: 0;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+}
+
+body:hover #settings-btn {
+    opacity: 1;
+}
+
+/* Background */
+.custom-bg {
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+/* Color Picker */
+.color-option {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+}
+
+.color-option.selected {
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #000;
+}
+
+/* Slider Container */
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.slider-container label {
+    min-width: 70px;
+}
+
+.slider-container input[type="range"] {
+    flex: 1;
+}
+
+.slider-container span {
+    min-width: 60px;
+    text-align: right;
+}
+
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: #2196F3;
+}
+
+input:checked+.slider:before {
+    transform: translateX(26px);
+}
+
+/* Color Input */
+.color-input {
+    width: 100px;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    /* 移动端图标和间距调整 */
+    :root {
+        --icon-size: 40px;
+        --icon-gap: 8px;
+        --text-size: 14px;
+        --text-icon-gap: 8px;
+    }
+
+    /* 移动端间距调整 */
+    .service-link {
+        padding: 0.25rem;
+    }
+}
+
+/* Services Container */
+#services-container {
+    max-width: var(--max-width);
+    margin: 0 auto;
+}
+
+.category-section .grid {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+    gap: var(--icon-gap);
+}
+
+/* Modal Footer */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.modal-footer button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.modal-footer button:hover {
+    background-color: #e5e7eb;
+}
+
+/* Reset Button */
+.reset-layout-btn {
+    width: 100%;
+    padding: 8px;
+    background-color: #fee2e2;
+    color: #dc2626;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.reset-layout-btn:hover {
+    background-color: #fecaca;
+}
+
+/* Service Link */
+.service-link {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    width: 100%;
+    height: 100%;
+}
+
+.service-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.service-link:active {
+    transform: translateY(0);
+}
+
+.service-link[data-text-position="row"] {
+    flex-direction: row;
+    gap: var(--text-icon-gap);
+}
+
+.service-link[data-text-position="column"] {
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--text-icon-gap);
+}
+
+.service-icon {
+    width: 100%;
+    height: auto;
+    max-width: var(--icon-size);
+    max-height: var(--icon-size);
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.service-name {
+    font-size: var(--text-size);
+    color: var(--text-color);
+    word-break: break-all;
+}
+
+/* Settings Modal Animation */
+#settings-modal {
+    transition: opacity 0.3s ease;
+}
+
+#settings-modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Settings Panel Scrollbar */
+#settings-modal .bg-white {
+    scrollbar-gutter: stable;
+}
+
+#settings-modal .bg-white::-webkit-scrollbar {
+    width: 4px;
+}
+
+#settings-modal .bg-white::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+#settings-modal .bg-white::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Firefox Scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}

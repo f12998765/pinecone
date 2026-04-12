@@ -113,9 +113,9 @@
 				"icon": "/icons/gemini.png"
 			},
 			{
-				"name": "Tldraw",
-				"uri": "https://www.tldraw.com/",
-				"icon": "/icons/tldraw.png"
+				"name": "Qwen",
+				"uri": "https://chat.qwen.ai/",
+				"icon": "/icons/qwen.png"
 			},
 			{
 				"name": "OutLook",

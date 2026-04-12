@@ -1,5 +1,5 @@
 // 缓存版本号 - 更新内容时请修改此版本号
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v4.1';
 const STATIC_CACHE = `pinecone-static-${CACHE_VERSION}`;
 const DATA_CACHE = `pinecone-data-${CACHE_VERSION}`;
 

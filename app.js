@@ -318,6 +318,9 @@ function renderServices(data) {
     });
 
     container.appendChild(fragment);
+
+    // Ensure current hover effect is applied to newly created elements
+    applyEffect(currentEffect);
 }
 
 // Error handler

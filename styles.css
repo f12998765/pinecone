@@ -11,11 +11,42 @@
     --text-position: row;
     --min-icon-size: 80px;
     --grid-columns: 6;
+    --settings-text-size: 14px;
 }
 
 /* Base Styles */
 body {
-    font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "苹方", "Hiragino Sans GB", "华文细黑", "Arial", sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica,
+        Arial, sans-serif;
+    background-color: #f9fafb;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 0.75rem;
+    margin: 0;
+}
+
+@media (min-width: 480px) {
+    body {
+        padding: 1rem;
+    }
+}
+
+@media (min-width: 768px) {
+    body {
+        padding: 2rem;
+    }
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.services-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
 /* Custom Scrollbar */
@@ -43,24 +74,323 @@ body {
 .service-icon {
     width: var(--icon-size);
     height: var(--icon-size);
+    max-width: var(--icon-size);
+    max-height: var(--icon-size);
     border-radius: var(--icon-radius);
     opacity: var(--icon-opacity);
+    object-fit: contain;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .service-name {
     font-size: var(--text-size);
     color: var(--text-color);
+    overflow-wrap: break-word;
+    transition: transform 0.2s ease;
 }
 
 /* Settings Button */
-#settings-btn {
+.settings-btn {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    padding: 0.75rem;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: none;
+    cursor: pointer;
     opacity: 0;
     transition: all 0.3s ease;
-    backdrop-filter: blur(8px);
+    z-index: 50;
 }
 
-body:hover #settings-btn {
+.settings-btn:hover {
+    background: #f3f4f6;
+}
+
+.settings-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #374151;
+}
+
+body:hover .settings-btn {
     opacity: 1;
+}
+
+/* Mobile: always visible settings button */
+@media (hover: none) {
+    .settings-btn {
+        opacity: 1;
+    }
+}
+
+.settings-btn:focus-visible {
+    opacity: 1;
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Settings Modal Overlay */
+.settings-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.settings-modal .modal-window {
+    font-size: var(--settings-text-size);
+}
+
+.settings-modal.hidden {
+    display: none;
+}
+
+/* 移动端设置面板背景遮罩 */
+@media (max-width: 640px) {
+    .settings-modal:not(.hidden) {
+        background: rgba(0, 0, 0, 0.15);
+    }
+}
+
+/* Draggable Modal Window */
+.modal-window {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 460px;
+    height: 520px;
+    max-height: 85vh;
+    min-width: 340px;
+    min-height: 300px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 
+        0 0 0 0.5px rgba(0, 0, 0, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.08),
+        0 8px 32px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    pointer-events: auto;
+    animation: modalSlideIn 0.2s ease-out;
+    resize: both;
+}
+
+.modal-window.dragging {
+    transform: none;
+}
+
+.modal-window.maximized {
+    width: calc(100% - 48px) !important;
+    height: calc(100% - 48px) !important;
+    top: 24px !important;
+    left: 24px !important;
+    right: auto !important;
+    transform: none !important;
+    max-height: none !important;
+    resize: none;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, calc(-50% - 10px)) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.modal-window.minimized {
+    height: auto !important;
+    resize: none;
+}
+
+.modal-window.minimized .tab-nav,
+.modal-window.minimized .tab-content {
+    display: none;
+}
+
+/* Resize handles */
+.modal-window::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    z-index: 10;
+}
+
+/* Modal Header (macOS style - compact) */
+.modal-header {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f6f6f6;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: default;
+    user-select: none;
+    padding: 0 12px;
+    flex-shrink: 0;
+}
+
+.modal-header:active {
+    cursor: default;
+    background: #f0f0f0;
+}
+
+.window-controls {
+    display: flex;
+    gap: 8px;
+    min-width: 52px;
+}
+
+.window-btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: opacity 0.15s;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.window-btn-icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity 0.15s;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.window-controls:hover .window-btn-icon {
+    opacity: 1;
+}
+
+.close-btn-mac {
+    background: #ff5f57;
+}
+.close-btn-mac .window-btn-icon {
+    color: #4a0002;
+    font-size: 8px;
+}
+
+.minimize-btn {
+    background: #febc2e;
+}
+.minimize-btn .window-btn-icon {
+    color: #995700;
+    font-size: 11px;
+    padding-top: 0.5px;
+}
+
+.fullscreen-btn {
+    background: #28c840;
+}
+.fullscreen-btn .window-btn-icon {
+    color: #006500;
+    font-size: 10px;
+}
+
+.modal-title {
+    font-size: 1em;
+    font-weight: 600;
+    color: #4d4d4d;
+    margin: 0;
+    text-align: center;
+    flex: 1;
+}
+
+.header-spacer {
+    min-width: 52px;
+}
+
+/* Tab Navigation (macOS segmented control style) */
+.tab-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    background: transparent;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 5px 4px 6px;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+.tab-btn {
+    flex: 0 0 auto;
+    padding: 0.35em 0.6em;
+    border: none;
+    background: transparent;
+    font-size: 0.82em;
+    font-weight: 500;
+    color: #6e6e73;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.15s;
+    white-space: nowrap;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.tab-btn:hover {
+    color: #1d1d1f;
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.tab-btn.active {
+    color: #1d1d1f;
+    background: rgba(0, 0, 0, 0.06);
+    font-weight: 600;
+}
+
+/* Tab Content */
+.tab-content {
+    overflow-y: auto;
+    flex: 1;
+    padding: 12px;
+}
+
+.tab-content::-webkit-scrollbar {
+    width: 5px;
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
 }
 
 /* Background */
@@ -72,48 +402,160 @@ body:hover #settings-btn {
 
 /* Color Picker */
 .color-option {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.15s;
+    border: 1.5px solid rgba(0, 0, 0, 0.08);
 }
 
 .color-option:hover {
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 .color-option.selected {
-    border: 2px solid #fff;
-    box-shadow: 0 0 0 2px #000;
+    border: 2px solid #007aff;
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+.color-picker-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.color-options {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.select-input {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    background: white;
+    font-size: 1em;
+    transition: border-color 0.15s;
+    color: #1d1d1f;
+}
+
+.select-input:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.file-input {
+    width: 100%;
+    padding: 5px 6px;
+    border: 1px dashed #d0d0d0;
+    border-radius: 6px;
+    background: #fafafa;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    font-size: 0.9em;
+    box-sizing: border-box;
+}
+
+.file-input::-webkit-file-upload-button {
+    visibility: hidden;
+    width: 0;
+}
+
+.file-input::before {
+    content: '选择文件';
+    display: inline-block;
+    padding: 3px 10px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    background: white;
+    color: #1d1d1f;
+    font-size: 0.85em;
+    margin-right: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.file-input:hover::before {
+    background: #f0f0f0;
+    border-color: #b0b0b0;
+}
+
+.file-input:hover {
+    border-color: #a0a0a0;
 }
 
 /* Slider Container */
 .slider-container {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.slider-container:last-child {
+    margin-bottom: 0;
 }
 
 .slider-container label {
-    min-width: 70px;
+    min-width: 64px;
+    font-size: 1em;
+    color: #1d1d1f;
 }
 
 .slider-container input[type="range"] {
     flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: #e0e0e0;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.slider-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+}
+
+.slider-container input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
 }
 
 .slider-container span {
-    min-width: 60px;
+    min-width: 48px;
     text-align: right;
+    font-size: 0.85em;
+    color: #86868b;
+    font-variant-numeric: tabular-nums;
+}
+
+.toggle-label {
+    font-size: 1em;
+    font-weight: 500;
+    color: #1d1d1f;
 }
 
 /* Toggle Switch */
 .switch {
     position: relative;
     display: inline-block;
-    width: 50px;
-    height: 24px;
+    width: 40px;
+    height: 22px;
 }
 
 .switch input {
@@ -129,38 +571,60 @@ body:hover #settings-btn {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 24px;
+    background-color: #e0e0e0;
+    transition: .2s;
+    border-radius: 22px;
 }
 
 .slider:before {
     position: absolute;
     content: "";
-    height: 16px;
-    width: 16px;
-    left: 4px;
-    bottom: 4px;
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
     background-color: white;
-    transition: .4s;
+    transition: .2s;
     border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 input:checked+.slider {
-    background-color: #2196F3;
+    background-color: #34c759;
 }
 
 input:checked+.slider:before {
-    transform: translateX(26px);
+    transform: translateX(18px);
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    margin-bottom: 10px;
 }
 
 /* Color Input */
 .color-input {
     width: 100px;
-    padding: 4px 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    padding: 5px 8px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
     font-family: monospace;
+    font-size: 0.92em;
+    color: #1d1d1f;
+    background: white;
+}
+
+.color-input:focus {
+    outline: none;
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.color-input.border-red-500 {
+    border-color: #ff3b30;
 }
 
 /* Responsive */
@@ -173,9 +637,213 @@ input:checked+.slider:before {
         --text-icon-gap: 8px;
     }
 
+    /* 移动端 body padding */
+    body {
+        padding: 0.5rem;
+    }
+
+    /* 移动端设置按钮 - 始终可见 */
+    .settings-btn {
+        opacity: 1 !important;
+        bottom: 0.75rem;
+        right: 0.75rem;
+        padding: 0.7rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .settings-icon {
+        width: 1.3rem;
+        height: 1.3rem;
+    }
+
     /* 移动端间距调整 */
     .service-link {
         padding: 0.25rem;
+    }
+
+    /* 移动端设置窗口 - 非全屏，保留预览 */
+    .modal-window {
+        width: 90% !important;
+        max-width: 380px !important;
+        height: 70vh !important;
+        max-height: 500px !important;
+        top: 15% !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        right: auto !important;
+        resize: none !important;
+        min-width: unset;
+        min-height: unset;
+        border-radius: 12px;
+        box-shadow: 
+            0 0 0 0.5px rgba(0, 0, 0, 0.1),
+            0 10px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-window.dragging {
+        transform: none !important;
+    }
+
+    /* 移动端 Tab 导航优化 */
+    .tab-nav {
+        padding: 6px 4px;
+        gap: 3px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .tab-btn {
+        padding: 0.35em 0.55em;
+        font-size: 0.78em;
+        border-radius: 6px;
+    }
+
+    /* 移动端效果网格优化 */
+    .effect-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+
+    .effect-option {
+        padding: 0.7em 0.3em;
+    }
+
+    .effect-preview {
+        font-size: 1.5em;
+    }
+
+    .effect-label {
+        font-size: 0.8em;
+    }
+
+    /* 移动端内容区域优化 */
+    .tab-content {
+        padding: 12px;
+    }
+
+    /* 移动端滑块优化 */
+    .slider-container {
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .slider-container label {
+        min-width: 64px;
+        font-size: 0.95em;
+    }
+
+    .slider-container input[type="range"] {
+        height: 6px;
+    }
+
+    .slider-container span {
+        min-width: 44px;
+        font-size: 0.85em;
+    }
+
+    /* 移动端开关优化 */
+    .toggle-container {
+        margin-bottom: 10px;
+    }
+
+    .toggle-label {
+        font-size: 0.95em;
+    }
+
+    .switch {
+        width: 44px;
+        height: 24px;
+    }
+
+    .slider:before {
+        height: 20px;
+        width: 20px;
+        left: 2px;
+        bottom: 2px;
+    }
+
+    input:checked+.slider:before {
+        transform: translateX(20px);
+    }
+
+    /* 移动端下拉框和输入框优化 */
+    .setting-item {
+        margin-bottom: 10px;
+    }
+
+    .setting-label {
+        font-size: 0.95em;
+    }
+
+    .select-input {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
+    .color-input {
+        padding: 6px 8px;
+        font-size: 14px;
+    }
+
+    /* 移动端颜色选择器优化 */
+    .color-options {
+        gap: 6px;
+    }
+
+    .color-option {
+        width: 22px;
+        height: 22px;
+    }
+
+    /* 移动端按钮优化 */
+    .btn {
+        padding: 10px 14px;
+        font-size: 0.95em;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+    }
+
+    /* 移动端分区优化 */
+    .settings-section {
+        margin-bottom: 12px;
+    }
+
+    .section-desc {
+        font-size: 0.88em;
+        margin-bottom: 10px;
+    }
+
+    /* 移动端触摸优化 - 防止300ms点击延迟 */
+    .tab-btn,
+    .effect-option,
+    .btn,
+    .settings-btn,
+    .close-btn,
+    .header-btn,
+    .window-btn,
+    select,
+    input[type="range"] {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* 修复移动端滚动 */
+    .tab-content {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* 防止 iOS 缩放 */
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+
+    /* 移动端设置窗口内容滚动 */
+    .modal-window,
+    .tab-content,
+    .effect-grid {
+        -webkit-overflow-scrolling: touch;
     }
 }
 
@@ -183,6 +851,45 @@ input:checked+.slider:before {
 #services-container {
     max-width: var(--max-width);
     margin: 0 auto;
+}
+
+.category-section h2 {
+    color: var(--text-color);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.category-title {
+    color: var(--text-color);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Error Message */
+.error-message {
+    text-align: center;
+    color: #86868b;
+    padding: 3rem 1rem;
+    font-size: 1em;
+}
+
+.retry-btn {
+    margin-top: 0.75rem;
+    padding: 0.45em 1em;
+    background: #fff5f5;
+    color: #ff3b30;
+    border: none;
+    border-radius: 0.45em;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 1em;
+    font-weight: 500;
+}
+
+.retry-btn:hover {
+    background: #ffe8e8;
 }
 
 .category-section .grid {
@@ -235,16 +942,318 @@ input:checked+.slider:before {
     transition: all 0.2s ease;
     width: 100%;
     height: 100%;
+    overflow: visible;
+    text-decoration: none;
 }
 
 .service-link:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: transparent;
+    transform: none;
+    box-shadow: none;
 }
 
 .service-link:active {
-    transform: translateY(0);
+    transform: none;
+}
+
+/* 方案1: 简洁放大（当前效果） */
+.demo-effect-1:hover .service-icon,
+.demo-effect-1:hover .service-name {
+    transform: scale(1.15);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 方案2: macOS Dock 风格 */
+.demo-effect-2:hover .service-icon {
+    transform: scale(1.3) translateY(-8px);
+    filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.1));
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.demo-effect-2:hover .service-name {
+    transform: scale(1.1);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 方案3: 卡片高亮风格 */
+.demo-effect-3:hover {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.demo-effect-3:hover .service-icon {
+    transform: scale(1.1);
+    transition: transform 0.25s ease;
+}
+
+.demo-effect-3:hover .service-name {
+    transform: scale(1.05);
+    transition: transform 0.25s ease;
+}
+
+/* 方案4: 微动效风格 */
+.demo-effect-4:hover .service-icon {
+    transform: scale(1.2) rotate(-3deg);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.demo-effect-4:hover .service-name {
+    transform: scale(1.1);
+    transition: transform 0.25s ease 0.05s;
+}
+
+.demo-effect-4:active .service-icon {
+    transform: scale(1.05) rotate(0deg);
+}
+
+/* 方案5: 渐变边框风格 */
+.demo-effect-5 {
+    position: relative;
+    background: transparent;
+}
+
+.demo-effect-5::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 0.75rem;
+    padding: 2px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.demo-effect-5:hover::before {
+    opacity: 1;
+}
+
+.demo-effect-5:hover .service-icon {
+    transform: scale(1.15);
+    transition: transform 0.25s ease;
+}
+
+.demo-effect-5:hover .service-name {
+    transform: scale(1.05);
+    transition: transform 0.25s ease;
+}
+
+/* 效果6: 弹性跳动 */
+.demo-effect-6:hover .service-icon {
+    animation: bounce-6 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.demo-effect-6:hover .service-name {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+@keyframes bounce-6 {
+    0%, 100% { transform: translateY(0); }
+    25% { transform: translateY(-12px); }
+    50% { transform: translateY(-4px); }
+    75% { transform: translateY(-8px); }
+}
+
+/* 效果7: 发光光晕 */
+.demo-effect-7:hover .service-icon {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 12px rgba(0, 122, 255, 0.7))
+            drop-shadow(0 0 24px rgba(0, 122, 255, 0.3));
+    transition: all 0.3s ease;
+}
+
+.demo-effect-7:hover .service-name {
+    transform: scale(1.1);
+    color: #007aff;
+    transition: all 0.3s ease;
+}
+
+/* 效果8: 翻转效果 */
+.demo-effect-8:hover .service-icon {
+    transform: scale(1.2) rotateY(360deg);
+    transition: transform 0.6s ease;
+}
+
+.demo-effect-8:hover .service-name {
+    transform: scale(1.1);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+/* 效果9: 边框扩散 */
+.demo-effect-9 {
+    position: relative;
+}
+
+.demo-effect-9::before,
+.demo-effect-9::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 2px solid #10b981;
+    border-radius: 0.75rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.demo-effect-9::after {
+    inset: -8px;
+}
+
+.demo-effect-9:hover::before {
+    opacity: 0.6;
+    inset: -2px;
+}
+
+.demo-effect-9:hover::after {
+    opacity: 0.3;
+    inset: -6px;
+}
+
+.demo-effect-9:hover .service-icon {
+    transform: scale(1.1);
+    transition: transform 0.25s ease;
+}
+
+.demo-effect-9:hover .service-name {
+    transform: scale(1.05);
+    transition: transform 0.25s ease;
+}
+
+/* 效果10: 阴影提升 */
+.demo-effect-10:hover .service-icon {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15),
+                0 6px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.demo-effect-10:hover .service-name {
+    transform: translateY(-4px);
+    transition: transform 0.3s ease 0.05s;
+}
+
+/* 效果11: 霓虹发光 */
+.demo-effect-11:hover .service-icon {
+    transform: scale(1.15);
+    filter: brightness(1.2) 
+            drop-shadow(0 0 8px #a855f7)
+            drop-shadow(0 0 16px #a855f7)
+            drop-shadow(0 0 32px #a855f7);
+    transition: all 0.3s ease;
+}
+
+.demo-effect-11:hover .service-name {
+    transform: scale(1.1);
+    color: #a855f7;
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+    transition: all 0.3s ease;
+}
+
+/* 效果12: 果冻弹跳 */
+.demo-effect-12:hover .service-icon {
+    animation: jelly-12 0.5s ease;
+}
+
+.demo-effect-12:hover .service-name {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+@keyframes jelly-12 {
+    0% { transform: scale(1, 1); }
+    25% { transform: scale(1.25, 0.75); }
+    50% { transform: scale(0.9, 1.1); }
+    75% { transform: scale(1.05, 0.95); }
+    100% { transform: scale(1.15, 1.15); }
+}
+
+/* 效果13: 渐变背景 */
+.demo-effect-13 {
+    position: relative;
+    z-index: 1;
+}
+
+.demo-effect-13::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 0.75rem;
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0.3s ease;
+}
+
+.demo-effect-13:hover::before {
+    opacity: 0.15;
+}
+
+.demo-effect-13:hover .service-icon {
+    transform: scale(1.15);
+    transition: transform 0.25s ease;
+}
+
+.demo-effect-13:hover .service-name {
+    transform: scale(1.1);
+    color: #764ba2;
+    transition: all 0.25s ease;
+}
+
+/* 效果14: 涟漪扩散 */
+.demo-effect-14 {
+    position: relative;
+    overflow: hidden;
+}
+
+.demo-effect-14::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(245, 158, 11, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
+    opacity: 0;
+}
+
+.demo-effect-14:hover::before {
+    width: 200%;
+    height: 200%;
+    opacity: 1;
+}
+
+.demo-effect-14:hover .service-icon {
+    transform: scale(1.15);
+    transition: transform 0.25s ease 0.1s;
+}
+
+.demo-effect-14:hover .service-name {
+    transform: scale(1.1);
+    transition: transform 0.25s ease 0.1s;
+}
+
+/* 效果15: 3D翻转 */
+.demo-effect-15 {
+    perspective: 1000px;
+}
+
+.demo-effect-15:hover .service-icon {
+    transform: rotateX(360deg) scale(1.15);
+    transition: transform 0.6s ease;
+}
+
+.demo-effect-15:hover .service-name {
+    transform: scale(1.1);
+    transition: transform 0.25s ease 0.2s;
 }
 
 .service-link[data-text-position="row"] {
@@ -259,50 +1268,321 @@ input:checked+.slider:before {
     gap: var(--text-icon-gap);
 }
 
-.service-icon {
-    width: 100%;
-    height: auto;
-    max-width: var(--icon-size);
-    max-height: var(--icon-size);
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-.service-name {
-    font-size: var(--text-size);
-    color: var(--text-color);
-    word-break: break-all;
-}
-
 /* Settings Modal Animation */
-#settings-modal {
+.settings-modal {
     transition: opacity 0.3s ease;
 }
 
-#settings-modal.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Settings Panel Scrollbar */
-#settings-modal .bg-white {
-    scrollbar-gutter: stable;
-}
-
-#settings-modal .bg-white::-webkit-scrollbar {
-    width: 4px;
-}
-
-#settings-modal .bg-white::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.1);
-}
-
-#settings-modal .bg-white::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.2);
-}
+/* Settings Panel Scrollbar - already handled by .tab-content */
 
 /* Firefox Scrollbar */
 * {
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* Settings Section - flat style, no card */
+.settings-section {
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    border: none;
+    margin-bottom: 12px;
+}
+
+.settings-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-desc {
+    font-size: 0.9em;
+    color: #86868b;
+    margin: 0 0 10px 0;
+}
+
+.setting-item {
+    margin-bottom: 12px;
+}
+
+.setting-label {
+    font-size: 1em;
+    font-weight: 500;
+    color: #1d1d1f;
+    margin-bottom: 6px;
+    display: block;
+}
+
+/* Effect Grid */
+.effect-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.effect-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 4px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fafafa;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 效果选项上的预览效果 - 只影响 effect-option 内部的元素 */
+.effect-option:hover .effect-preview {
+    transform: scale(1.2);
+}
+
+/* 方案1: 简洁放大 */
+.effect-option[data-effect="1"]:hover .effect-preview {
+    transform: scale(1.3);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 方案2: macOS Dock */
+.effect-option[data-effect="2"]:hover .effect-preview {
+    transform: scale(1.3) translateY(-4px);
+    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.15));
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 方案3: 卡片高亮 */
+.effect-option[data-effect="3"]:hover {
+    background: rgba(0, 122, 255, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.effect-option[data-effect="3"]:hover .effect-preview {
+    transform: scale(1.15);
+    transition: transform 0.25s ease;
+}
+
+/* 方案4: 旋转动效 */
+.effect-option[data-effect="4"]:hover .effect-preview {
+    transform: scale(1.25) rotate(-8deg);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 方案5: 渐变边框 */
+.effect-option[data-effect="5"] {
+    position: relative;
+}
+.effect-option[data-effect="5"]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    padding: 2px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.effect-option[data-effect="5"]:hover::before {
+    opacity: 1;
+}
+.effect-option[data-effect="5"]:hover .effect-preview {
+    transform: scale(1.2);
+    transition: transform 0.25s ease;
+}
+
+/* 方案6: 弹性跳动 */
+.effect-option[data-effect="6"]:hover .effect-preview {
+    animation: effect-bounce-6 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes effect-bounce-6 {
+    0%, 100% { transform: translateY(0); }
+    25% { transform: translateY(-6px); }
+    50% { transform: translateY(-2px); }
+    75% { transform: translateY(-4px); }
+}
+
+/* 方案7: 发光光晕 */
+.effect-option[data-effect="7"]:hover .effect-preview {
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 8px rgba(0, 122, 255, 0.5))
+            drop-shadow(0 0 16px rgba(0, 122, 255, 0.25));
+    transition: all 0.3s ease;
+}
+
+/* 方案8: 翻转效果 */
+.effect-option[data-effect="8"]:hover .effect-preview {
+    transform: scale(1.2) rotateY(360deg);
+    transition: transform 0.6s ease;
+}
+
+/* 方案9: 边框扩散 */
+.effect-option[data-effect="9"]:hover {
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3), 0 0 0 4px rgba(16, 185, 129, 0.15);
+}
+.effect-option[data-effect="9"]:hover .effect-preview {
+    transform: scale(1.15);
+    transition: transform 0.25s ease;
+}
+
+/* 方案10: 阴影提升 */
+.effect-option[data-effect="10"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+.effect-option[data-effect="10"]:hover .effect-preview {
+    transform: translateY(-2px);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 方案11: 霓虹发光 */
+.effect-option[data-effect="11"]:hover .effect-preview {
+    transform: scale(1.2);
+    filter: brightness(1.1)
+            drop-shadow(0 0 6px #a855f7)
+            drop-shadow(0 0 12px #a855f7);
+    transition: all 0.3s ease;
+}
+
+/* 方案12: 果冻弹跳 */
+.effect-option[data-effect="12"]:hover .effect-preview {
+    animation: effect-jelly-12 0.5s ease;
+}
+@keyframes effect-jelly-12 {
+    0% { transform: scale(1, 1); }
+    25% { transform: scale(1.2, 0.8); }
+    50% { transform: scale(0.9, 1.1); }
+    75% { transform: scale(1.05, 0.95); }
+    100% { transform: scale(1.2, 1.2); }
+}
+
+/* 方案13: 渐变背景 */
+.effect-option[data-effect="13"] {
+    position: relative;
+}
+.effect-option[data-effect="13"]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    opacity: 0;
+    z-index: 0;
+    transition: opacity 0.3s ease;
+}
+.effect-option[data-effect="13"]:hover::before {
+    opacity: 0.1;
+}
+.effect-option[data-effect="13"]:hover .effect-preview,
+.effect-option[data-effect="13"]:hover .effect-label {
+    position: relative;
+    z-index: 1;
+}
+.effect-option[data-effect="13"]:hover .effect-preview {
+    transform: scale(1.2);
+    transition: transform 0.25s ease;
+}
+
+/* 方案14: 涟漪扩散 */
+.effect-option[data-effect="14"] {
+    overflow: hidden;
+}
+.effect-option[data-effect="14"]::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(245, 158, 11, 0.15);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
+    opacity: 0;
+    z-index: 0;
+}
+.effect-option[data-effect="14"]:hover::before {
+    width: 150%;
+    height: 150%;
+    opacity: 1;
+}
+.effect-option[data-effect="14"]:hover .effect-preview,
+.effect-option[data-effect="14"]:hover .effect-label {
+    position: relative;
+    z-index: 1;
+}
+.effect-option[data-effect="14"]:hover .effect-preview {
+    transform: scale(1.2);
+    transition: transform 0.25s ease 0.1s;
+}
+
+/* 方案15: 3D翻转 */
+.effect-option[data-effect="15"]:hover .effect-preview {
+    transform: rotateX(360deg) scale(1.2);
+    transition: transform 0.6s ease;
+}
+
+.effect-option:hover {
+    border-color: #007aff;
+    background: #f0f7ff;
+}
+
+.effect-option.selected {
+    border-color: #007aff;
+    background: #e8f2ff;
+    box-shadow: 0 1px 4px rgba(0, 122, 255, 0.15);
+}
+
+.effect-preview {
+    font-size: 1.6em;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.effect-label {
+    font-size: 0.78em;
+    color: #86868b;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Buttons */
+.btn {
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 0.92em;
+}
+
+.btn-primary {
+    background: #007aff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0066d6;
+}
+
+.btn-danger {
+    background: #fff5f5;
+    color: #ff3b30;
+}
+
+.btn-danger:hover {
+    background: #ffe8e8;
+}
+
+.w-full {
+    width: 100%;
 }

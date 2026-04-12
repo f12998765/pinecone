@@ -1,9 +1,9 @@
 // 缓存版本号 - 更新内容时请修改此版本号
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const STATIC_CACHE = `pinecone-static-${CACHE_VERSION}`;
 const DATA_CACHE = `pinecone-data-${CACHE_VERSION}`;
 
-// 预缓存的静态资源（只包含实际存在的文件）
+// 预缓存的静态资源
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -33,7 +33,6 @@ self.addEventListener('activate', event => {
             .map(k => caches.delete(k))
       )
     ).then(() => {
-      // 通知所有客户端有新内容可用
       return self.clients.matchAll().then(clients => {
         clients.forEach(client => {
           client.postMessage({ action: 'newContentAvailable' });
@@ -51,77 +50,91 @@ self.addEventListener('message', event => {
   }
 });
 
+// 后台更新缓存的辅助函数
+function backgroundUpdateCache(cache, request) {
+  fetch(request).then(async response => {
+    if (response.ok) {
+      const cacheToUse = cache || await caches.open(STATIC_CACHE);
+      cacheToUse.put(request, response.clone());
+    }
+  }).catch(() => {
+    // Silently fail - background update is best-effort
+  });
+}
+
 // 请求拦截
 self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
 
-  // 针对 services.json：网络优先，失败回退缓存，并后台更新缓存
+  // 针对 services.json：网络优先，失败回退缓存
   if (requestUrl.pathname.endsWith('/services.json')) {
     event.respondWith(
       fetch(event.request)
-        .then(response => {
+        .then(async response => {
           if (response.ok) {
             const responseClone = response.clone();
-            caches.open(DATA_CACHE).then(cache => {
+            try {
+              const cache = await caches.open(DATA_CACHE);
               cache.put(event.request, responseClone);
-            });
+            } catch (e) {
+              console.warn('Failed to cache services.json:', e);
+            }
           }
           return response;
         })
-        .catch(() => {
-          return caches.match(event.request);
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          return cached || new Response('Unable to load services', {
+            status: 503,
+            statusText: 'Service Unavailable'
+          });
         })
     );
     return;
   }
 
-  // 动态缓存 icons 文件夹：缓存优先，但带后台更新
+  // icons 文件夹：缓存优先，带后台更新
   if (requestUrl.pathname.startsWith('/icons/')) {
     event.respondWith(
-      caches.open(STATIC_CACHE).then(async cache => {
-        const cached = await cache.match(event.request);
+      caches.match(event.request).then(async cached => {
         if (cached) {
-          // 有缓存，后台更新
-          fetch(event.request).then(response => {
-            if (response.ok) {
-              cache.put(event.request, response.clone());
-            }
-          }).catch(() => {});
+          backgroundUpdateCache(null, event.request);
           return cached;
         }
-        // 没缓存，请求网络
-        return fetch(event.request).then(response => {
+        try {
+          const response = await fetch(event.request);
           if (response.ok) {
+            const cache = await caches.open(STATIC_CACHE);
             cache.put(event.request, response.clone());
           }
           return response;
-        }).catch(() => null);
+        } catch (e) {
+          // Return a simple fallback or the cached version if available
+          return new Response('', { status: 404, statusText: 'Not Found' });
+        }
       })
     );
     return;
   }
 
-  // 静态资源：缓存优先，但带后台更新
+  // 静态资源：缓存优先，带后台更新
   if (STATIC_ASSETS.includes(requestUrl.pathname)) {
     event.respondWith(
-      caches.open(STATIC_CACHE).then(async cache => {
-        const cached = await cache.match(event.request);
+      caches.match(event.request).then(async cached => {
         if (cached) {
-          // 有缓存，后台更新
-          fetch(event.request).then(response => {
-            if (response.ok) {
-              cache.put(event.request, response.clone());
-            }
-          }).catch(() => {});
+          backgroundUpdateCache(null, event.request);
           return cached;
         }
-        // 没缓存，请求网络
-        return fetch(event.request).then(response => {
+        try {
+          const response = await fetch(event.request);
           if (response.ok) {
+            const cache = await caches.open(STATIC_CACHE);
             cache.put(event.request, response.clone());
           }
           return response;
-        }).catch(() => null);
+        } catch (e) {
+          return new Response('', { status: 404, statusText: 'Not Found' });
+        }
       })
     );
     return;
@@ -129,6 +142,9 @@ self.addEventListener('fetch', event => {
 
   // 其他请求：网络优先，失败回退缓存
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request).catch(async () => {
+      const cached = await caches.match(event.request);
+      return cached || new Response('', { status: 404, statusText: 'Not Found' });
+    })
   );
 });

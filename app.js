@@ -82,7 +82,7 @@ document.addEventListener('alpine:init', () => {
         linkdingLoading: false,
         linkdingError: '',
         linkdingTags: [],
-        linkdingSelectedTags: Alpine.$persist([]).as('pinecone-linkdingSelectedTags'),
+        linkdingSelectedTags: [],
         linkdingTagsLoading: false,
         tagModalOpen: false,
         tagSearch: '',
@@ -92,7 +92,7 @@ document.addEventListener('alpine:init', () => {
 
         // Linkding filter & custom icons
         linkdingFilterUrls: Alpine.$persist([]).as('pinecone-linkdingFilterUrls'),
-        linkdingCustomIcons: Alpine.$persist({}).as('pinecone-linkdingCustomUrls'),
+        linkdingCustomIcons: Alpine.$persist({}).as('pinecone-linkdingCustomIcons'),
         contextMenu: { show: false, x: 0, y: 0, service: null },
         filterUrlsText: '',
         customIconsText: '',
@@ -119,11 +119,19 @@ document.addEventListener('alpine:init', () => {
         init() {
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
+                this.$watch('iconSize', v => { if (v > 48) this.iconSize = 48; });
+                this.$watch('iconGap', v => { if (v > 10) this.iconGap = 10; });
+                this.$watch('textSize', v => { if (v > 15) this.textSize = 15; });
+                this.$watch('textIconGap', v => { if (v > 10) this.textIconGap = 10; });
+                this.$watch('gridColumns', v => { if (v > 5) this.gridColumns = 5; });
+                this.$watch('maxWidth', v => { if (v > window.innerWidth - 32) this.maxWidth = window.innerWidth - 32; });
+                // Apply caps immediately for initial values
                 if (this.iconSize > 48) this.iconSize = 48;
-                if (this.iconGap > 8) this.iconGap = 8;
-                if (this.textSize > 14) this.textSize = 14;
-                if (this.textIconGap > 8) this.textIconGap = 8;
-                if (this.gridColumns > 4) this.gridColumns = 4;
+                if (this.iconGap > 10) this.iconGap = 10;
+                if (this.textSize > 15) this.textSize = 15;
+                if (this.textIconGap > 10) this.textIconGap = 10;
+                if (this.gridColumns > 5) this.gridColumns = 5;
+                if (this.maxWidth > window.innerWidth - 32) this.maxWidth = window.innerWidth - 32;
             }
 
             if (!this.linkdingProxy) {
@@ -160,6 +168,14 @@ document.addEventListener('alpine:init', () => {
                     this.linkdingData = data;
                 }
                 this.loadServices();
+            }).catch(() => {
+                this._loadingLinkding = false;
+                this.loadServices();
+            });
+            PineconeDB.get('linkdingSelectedTags').then(tags => {
+                if (tags && tags.length > 0) {
+                    this.linkdingSelectedTags = tags;
+                }
             }).catch(() => {});
             PineconeDB.get('bgDataUrl').then(url => {
                 if (url) this.bgDataUrl = url;
@@ -226,30 +242,6 @@ document.addEventListener('alpine:init', () => {
                 .filter(cat => cat.services.length > 0);
         },
 
-        async testLinkdingConnection() {
-            const urlErr = LinkdingFetcher.validateUrl(this.linkdingUrl);
-            if (urlErr) { this.linkdingError = urlErr; return; }
-            const tokenErr = LinkdingFetcher.validateToken(this.linkdingToken);
-            if (tokenErr) { this.linkdingError = tokenErr; return; }
-
-            this.linkdingLoading = true;
-            this.linkdingError = '正在测试连接...';
-            try {
-                const base = this.linkdingUrl.replace(/\/+$/, '');
-                const testUrl = this.linkdingProxyEnabled && this.linkdingProxy
-                    ? this.linkdingProxy.replace('{url}', encodeURIComponent(`${base}/api/bookmarks/?limit=1`))
-                    : `${base}/api/bookmarks/?limit=1`;
-                const res = await fetch(testUrl, {
-                    headers: { Authorization: `Token ${this.linkdingToken}` }
-                });
-                if (!res.ok) throw new Error(res.status === 401 ? '令牌无效' : `状态码 ${res.status}`);
-                this.linkdingError = '连接成功';
-            } catch (err) {
-                this.linkdingError = '连接失败: ' + err.message;
-            }
-            this.linkdingLoading = false;
-        },
-
         refreshIcons() {
             IconFetcher.refreshCache();
             this.iconMap = {};
@@ -295,6 +287,7 @@ document.addEventListener('alpine:init', () => {
             this.linkdingSelectedTags = this.linkdingSelectedTags.includes(name)
                 ? this.linkdingSelectedTags.filter(t => t !== name)
                 : [...this.linkdingSelectedTags, name];
+            PineconeDB.set('linkdingSelectedTags', [...this.linkdingSelectedTags]).catch(() => {});
         },
 
         async fetchLinkdingTags() {
@@ -326,7 +319,7 @@ document.addEventListener('alpine:init', () => {
             this.linkdingLoading = true;
             this.linkdingError = '';
 
-            LinkdingFetcher.fetchBookmarks(this.linkdingUrl, this.linkdingToken, this.linkdingSelectedTags || [], this.linkdingProxyEnabled ? this.linkdingProxy : '')
+            LinkdingFetcher.fetchBookmarks(this.linkdingUrl, this.linkdingToken, this.linkdingSelectedTags, this.linkdingProxyEnabled ? this.linkdingProxy : '')
                 .then(data => {
                     this.linkdingData = data;
                     this.services = this._filterInvalid(data);
@@ -375,6 +368,8 @@ document.addEventListener('alpine:init', () => {
                 let x = cx, y = cy;
                 if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 8;
                 if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 8;
+                if (x < 0) x = 8;
+                if (y < 0) y = 8;
                 this.contextMenu = { show: true, x, y, service };
                 this._suppressNextClick = true;
             }, 500);
@@ -408,11 +403,14 @@ document.addEventListener('alpine:init', () => {
             let x = event.clientX, y = event.clientY;
             if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 8;
             if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 8;
+            if (x < 0) x = 8;
+            if (y < 0) y = 8;
             this.contextMenu = { show: true, x, y, service };
         },
 
         hideContextMenu() {
             this.contextMenu.show = false;
+            this._suppressNextClick = false;
         },
 
         filterUrlFromMenu() {
@@ -544,7 +542,33 @@ document.addEventListener('alpine:init', () => {
             this.hoverEffect = 2;
             this.settingsTextSize = 14;
             this.bgDataUrl = null;
+            
+            // Reset Linkding settings
+            this.dataSource = 'local';
+            this.linkdingUrl = '';
+            this.linkdingToken = '';
+            this.linkdingProxy = 'https://corsproxy.io/?url={url}';
+            this.linkdingProxyEnabled = false;
+            this.linkdingData = null;
+            this.linkdingError = '';
+            this.linkdingTags = [];
+            this.linkdingSelectedTags = [];
+            this.linkdingFilterUrls = [];
+            this.linkdingCustomIcons = {};
+            this.filterUrlsText = '';
+            this.customIconsText = '';
+            
             PineconeDB.remove('bgDataUrl').catch(() => {});
+            PineconeDB.remove('linkdingData').catch(() => {});
+            PineconeDB.remove('pinecone-linkdingFilterUrls').catch(() => {});
+            PineconeDB.remove('pinecone-linkdingCustomIcons').catch(() => {});
+            PineconeDB.remove('linkdingSelectedTags').catch(() => {});
+            PineconeDB.remove('pinecone-linkdingSelectedTags').catch(() => {});
+            PineconeDB.remove('pinecone-linkdingUrl').catch(() => {});
+            PineconeDB.remove('pinecone-linkdingToken').catch(() => {});
+            PineconeDB.remove('pinecone-linkdingProxy').catch(() => {});
+            PineconeDB.remove('pinecone-linkdingProxyEnabled').catch(() => {});
+            
             this.applyCssVars();
         },
 

@@ -1,5 +1,5 @@
 // 缓存版本号 - 更新内容时请修改此版本号
-const CACHE_VERSION = 'v4.1';
+const CACHE_VERSION = 'v4.3';
 const STATIC_CACHE = `pinecone-static-${CACHE_VERSION}`;
 const DATA_CACHE = `pinecone-data-${CACHE_VERSION}`;
 
@@ -18,7 +18,8 @@ const STATIC_ASSETS = [
   '/app.js',
   '/icon-fetcher.js',
   '/linkding-fetcher.js',
-  '/db.js'
+  '/db.js',
+  '/persist.js'
 ];
 
 // 安装阶段：预缓存静态资源
@@ -138,6 +139,30 @@ self.addEventListener('fetch', event => {
           return response;
         } catch (e) {
           return new Response('', { status: 404, statusText: 'Not Found' });
+        }
+      })
+    );
+    return;
+  }
+
+  // CDN 资源：缓存优先，带后台更新
+  if (requestUrl.hostname === 'cdn.jsdelivr.net' && requestUrl.pathname.includes('/alpinejs')) {
+    event.respondWith(
+      caches.match(event.request).then(async cached => {
+        if (cached) {
+          backgroundUpdateCache(null, event.request);
+          return cached;
+        }
+        try {
+          const response = await fetch(event.request);
+          if (response.ok) {
+            const cache = await caches.open(STATIC_CACHE);
+            cache.put(event.request, response.clone());
+          }
+          return response;
+        } catch (e) {
+          const cached = await caches.match(event.request);
+          return cached || new Response('', { status: 404, statusText: 'Not Found' });
         }
       })
     );

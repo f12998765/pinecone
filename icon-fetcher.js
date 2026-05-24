@@ -74,13 +74,13 @@ const IconFetcher = {
         let index = 0;
 
         const next = () => {
-            if (index >= unique.length) return;
+            if (index >= unique.length) return null;
             const i = index++;
-            return this.resolveDomain(unique[i]).finally(() => next());
+            return this.resolveDomain(unique[i]).finally(next);
         };
 
         return Promise.allSettled(
-            Array.from({ length: Math.min(concurrency, unique.length) }, () => next())
+            Array.from({ length: Math.min(concurrency, unique.length) }, next)
         );
     },
 
@@ -122,7 +122,7 @@ const IconFetcher = {
             let done = false;
             const timer = setTimeout(() => {
                 if (!done) { done = true; resolve(false); }
-            }, 4000);
+            }, 2000);
             img.onload = () => {
                 if (!done) { done = true; clearTimeout(timer); resolve(true); }
             };

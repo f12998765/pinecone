@@ -193,12 +193,6 @@
                             <label class="setting-label">API 令牌</label>
                             <input type="password" class="select-input" x-model="linkdingToken" placeholder="输入令牌">
                         </div>
-                        <div class="setting-item" style="border-bottom:none">
-                            <button class="btn btn-primary w-full" @click="handleTagButton" :disabled="linkdingTagsLoading || !linkdingUrl || !linkdingToken">
-                                选择标签
-                                <span x-show="linkdingSelectedTags.length" style="opacity:0.7" x-text="'(' + linkdingSelectedTags.length + ')'"></span>
-                            </button>
-                        </div>
                         <div class="toggle-container">
                             <label class="toggle-label">API 代理</label>
                             <label class="switch">
@@ -212,9 +206,17 @@
                                 <input type="url" class="select-input" x-model="linkdingProxy" placeholder="https://corsproxy.io/?url={url}" style="font-size:0.85em">
                             </div>
                         </template>
-                        <div class="btn-row">
-                            <button class="btn btn-secondary" @click="testLinkdingConnection" :disabled="linkdingLoading" x-text="linkdingLoading ? '测试中...' : '测试连接'"></button>
-                            <button class="btn btn-primary" @click="syncLinkding" :disabled="linkdingLoading" x-text="linkdingLoading ? '获取中...' : '获取书签'"></button>
+                        <div class="setting-item" style="border-bottom:none">
+                            <button class="btn btn-secondary w-full" @click="testLinkdingConnection" :disabled="linkdingLoading" x-text="linkdingLoading ? '测试中...' : '测试连接'"></button>
+                        </div>
+                        <div class="setting-item" style="border-bottom:none">
+                            <button class="btn btn-primary w-full" @click="handleTagButton" :disabled="linkdingTagsLoading || !linkdingUrl || !linkdingToken">
+                                选择标签
+                                <span x-show="linkdingSelectedTags.length" style="opacity:0.7" x-text="'(' + linkdingSelectedTags.length + ')'"></span>
+                            </button>
+                        </div>
+                        <div class="setting-item" style="border-bottom:none">
+                            <button class="btn btn-primary w-full" @click="syncLinkding" :disabled="linkdingLoading" x-text="linkdingLoading ? '获取中...' : '获取书签'"></button>
                         </div>
                         <template x-if="services.length > 0">
                             <div class="btn-row" style="margin-top:4px">
@@ -345,8 +347,9 @@
 
     <script defer src="icon-fetcher.js"></script>
     <script defer src="linkding-fetcher.js"></script>
+    <script defer src="db.js"></script>
+    <script defer src="persist.js"></script>
     <script defer src="app.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
 </body>

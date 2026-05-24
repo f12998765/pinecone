@@ -56,7 +56,7 @@ document.addEventListener('alpine:init', () => {
             { preview: '🚀', label: 'macOS Dock' }
         ],
 
-        // Persisted settings (localStorage)
+        // Persisted settings (IndexedDB via PineconeDB)
         iconSize: Alpine.$persist(64).as('pinecone-iconSize'),
         iconRadius: Alpine.$persist(12).as('pinecone-iconRadius'),
         iconOpacity: Alpine.$persist(100).as('pinecone-iconOpacity'),
@@ -70,7 +70,7 @@ document.addEventListener('alpine:init', () => {
         gridColumns: Alpine.$persist(8).as('pinecone-gridColumns'),
         hoverEffect: Alpine.$persist(2).as('pinecone-hoverEffect'),
         settingsTextSize: Alpine.$persist(14).as('pinecone-settingsTextSize'),
-        bgDataUrl: Alpine.$persist(null).as('pinecone-bg'),
+        bgDataUrl: null,
 
         // Linkding
         dataSource: Alpine.$persist('local').as('pinecone-dataSource'),
@@ -78,7 +78,7 @@ document.addEventListener('alpine:init', () => {
         linkdingToken: Alpine.$persist('').as('pinecone-linkdingToken'),
         linkdingProxy: Alpine.$persist('https://corsproxy.io/?url={url}').as('pinecone-linkdingProxy'),
         linkdingProxyEnabled: Alpine.$persist(false).as('pinecone-linkdingProxyEnabled'),
-        linkdingData: Alpine.$persist(null).as('pinecone-linkdingData'),
+        linkdingData: null,
         linkdingLoading: false,
         linkdingError: '',
         linkdingTags: [],
@@ -101,6 +101,7 @@ document.addEventListener('alpine:init', () => {
         _suppressNextClick: false,
         _refreshTotal: 0,
         _refreshDone: 0,
+        _loadingLinkding: false,
 
         get activeServices() {
             if (this.dataSource === 'linkding' && this.linkdingFilterUrls?.length) {
@@ -118,32 +119,17 @@ document.addEventListener('alpine:init', () => {
         init() {
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
-                if (localStorage.getItem('pinecone-iconSize') === null) {
-                    this.iconSize = 48;
-                    this.iconGap = 8;
-                    this.textSize = 14;
-                    this.textIconGap = 8;
-                    this.gridColumns = 4;
-                } else {
-                    if (this.iconSize > 48) this.iconSize = 48;
-                    if (this.iconGap > 8) this.iconGap = 8;
-                    if (this.textSize > 14) this.textSize = 14;
-                    if (this.textIconGap > 8) this.textIconGap = 8;
-                    if (this.gridColumns > 4) this.gridColumns = 4;
-                }
-            }
-
-            // Migrate old single tag to multi-select
-            const oldTag = localStorage.getItem('pinecone-linkdingTag');
-            if (oldTag && this.linkdingSelectedTags.length === 0) {
-                try { const t = JSON.parse(oldTag); if (t) this.linkdingSelectedTags = [t]; } catch {}
+                if (this.iconSize > 48) this.iconSize = 48;
+                if (this.iconGap > 8) this.iconGap = 8;
+                if (this.textSize > 14) this.textSize = 14;
+                if (this.textIconGap > 8) this.textIconGap = 8;
+                if (this.gridColumns > 4) this.gridColumns = 4;
             }
 
             if (!this.linkdingProxy) {
                 this.linkdingProxy = 'https://corsproxy.io/?url={url}';
             }
             IconFetcher.init();
-            this.iconMap = IconFetcher.getAllCached();
             IconFetcher.onResolved((domain, url) => {
                 this.iconMap[domain] = url;
                 if (this._refreshTotal > 0) {
@@ -156,10 +142,28 @@ document.addEventListener('alpine:init', () => {
                     }
                 }
             });
+            IconFetcher.onReady(() => {
+                this.iconMap = IconFetcher.getAllCached();
+            });
 
+            if (this.dataSource === 'linkding' && !this.linkdingData) {
+                this._loadingLinkding = true;
+            }
             this.loadServices();
+            this._buildServiceMap();
             this.applyCssVars();
             this.applyBg();
+
+            PineconeDB.get('linkdingData').then(data => {
+                this._loadingLinkding = false;
+                if (data) {
+                    this.linkdingData = data;
+                }
+                this.loadServices();
+            }).catch(() => {});
+            PineconeDB.get('bgDataUrl').then(url => {
+                if (url) this.bgDataUrl = url;
+            }).catch(() => {});
 
             this.$watch('linkdingFilterUrls', () => {
                 this.filterUrlsText = JSON.stringify(this.linkdingFilterUrls || [], null, 2);
@@ -168,9 +172,9 @@ document.addEventListener('alpine:init', () => {
                 this.customIconsText = JSON.stringify(this.linkdingCustomIcons || {}, null, 2);
             });
 
-            const numericKeys = ['iconSize','iconRadius','iconOpacity','iconGap','textSize',
+            const cssVarKeys = ['iconSize','iconRadius','iconOpacity','iconGap','textSize',
                 'textColor','maxWidth','textIconGap','textPosition','gridColumns','settingsTextSize'];
-            numericKeys.forEach(k => this.$watch(k, () => this.applyCssVars()));
+            cssVarKeys.forEach(k => this.$watch(k, () => this.applyCssVars()));
             this.$watch('bgDataUrl', () => this.applyBg());
             this.$watch('dataSource', () => this.loadServices());
             this.$watch('services', () => this._buildServiceMap());
@@ -184,7 +188,9 @@ document.addEventListener('alpine:init', () => {
                     this.linkdingError = '';
                 } else {
                     this.services = [];
-                    this.linkdingError = '尚未同步 Linkding 数据';
+                    if (!this._loadingLinkding) {
+                        this.linkdingError = '尚未同步 Linkding 数据';
+                    }
                 }
                 return;
             }
@@ -265,6 +271,7 @@ document.addEventListener('alpine:init', () => {
         clearLinkdingData() {
             if (!confirm('确定清除所有 Linkding 数据和图标缓存？')) return;
             this.linkdingData = null;
+            PineconeDB.remove('linkdingData').catch(() => {});
             IconFetcher.refreshCache();
             this.iconMap = {};
             this.loadServices();
@@ -323,6 +330,7 @@ document.addEventListener('alpine:init', () => {
                 .then(data => {
                     this.linkdingData = data;
                     this.services = this._filterInvalid(data);
+                    PineconeDB.set('linkdingData', data).catch(() => {});
                     this.linkdingLoading = false;
                     const count = data.reduce((s, c) => s + c.services.length, 0);
                     this.linkdingError = `同步成功，共 ${count} 个书签`;
@@ -357,10 +365,11 @@ document.addEventListener('alpine:init', () => {
             const touch = event.touches[0];
             if (!touch) return;
             const cx = touch.clientX, cy = touch.clientY;
+            const uri = link.dataset.uri;
             clearTimeout(this._lpTimer);
             this._lpTimer = setTimeout(() => {
                 this._lpTimer = null;
-                const service = this._serviceByUri(link.dataset.uri);
+                const service = this._serviceByUri(uri);
                 if (!service) return;
                 const menuW = 180, menuH = 80;
                 let x = cx, y = cy;
@@ -441,10 +450,11 @@ document.addEventListener('alpine:init', () => {
         handleCustomIconUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
+            const input = event.target;
             const reader = new FileReader();
             reader.onload = (ev) => {
                 this.customIconModal.url = ev.target.result;
-                event.target.value = '';
+                input.value = '';
             };
             reader.readAsDataURL(file);
         },
@@ -499,13 +509,23 @@ document.addEventListener('alpine:init', () => {
         handleBgUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                if (!confirm(`图片较大 (${(file.size / 1024 / 1024).toFixed(1)}MB)，确定继续？`)) {
+                    e.target.value = '';
+                    return;
+                }
+            }
             const reader = new FileReader();
-            reader.onload = (ev) => { this.bgDataUrl = ev.target.result; };
+            reader.onload = (ev) => {
+                this.bgDataUrl = ev.target.result;
+                PineconeDB.set('bgDataUrl', ev.target.result).catch(() => {});
+            };
             reader.readAsDataURL(file);
         },
 
         resetBg() {
             this.bgDataUrl = null;
+            PineconeDB.remove('bgDataUrl').catch(() => {});
         },
 
         resetAll() {
@@ -524,6 +544,7 @@ document.addEventListener('alpine:init', () => {
             this.hoverEffect = 2;
             this.settingsTextSize = 14;
             this.bgDataUrl = null;
+            PineconeDB.remove('bgDataUrl').catch(() => {});
             this.applyCssVars();
         },
 
@@ -564,7 +585,6 @@ if ('serviceWorker' in navigator) {
                 };
             }
         };
-
 
     }).catch(err => {
         console.error('ServiceWorker 注册失败:', err);

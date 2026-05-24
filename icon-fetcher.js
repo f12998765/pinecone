@@ -2,18 +2,31 @@ const IconFetcher = {
     _cache: null,
     _resolving: {},
     _listeners: [],
+    _readyListeners: [],
+    _ready: false,
 
     init() {
-        try {
-            const raw = localStorage.getItem('pinecone-iconMap');
-            this._cache = raw ? JSON.parse(raw) : {};
-        } catch {
-            this._cache = {};
-        }
+        this._cache = {};
+        PineconeDB.get('pinecone-iconMap').then(data => {
+            if (data && typeof data === 'object') {
+                this._cache = data;
+            }
+            this._ready = true;
+            this._readyListeners.forEach(cb => cb());
+            this._readyListeners = [];
+        }).catch(() => {
+            this._ready = true;
+            this._readyListeners.forEach(cb => cb());
+            this._readyListeners = [];
+        });
     },
 
-    getIconUrl(domain) {
-        return this._cache ? this._cache[domain] : undefined;
+    onReady(callback) {
+        if (this._ready) {
+            callback();
+        } else {
+            this._readyListeners.push(callback);
+        }
     },
 
     getAllCached() {
@@ -31,9 +44,7 @@ const IconFetcher = {
     },
 
     _saveCache() {
-        try {
-            localStorage.setItem('pinecone-iconMap', JSON.stringify(this._cache));
-        } catch {}
+        PineconeDB.set('pinecone-iconMap', this._cache).catch(() => {});
     },
 
     resolveDomain(domain) {
@@ -125,7 +136,7 @@ const IconFetcher = {
     refreshCache() {
         this._cache = {};
         this._resolving = {};
-        try { localStorage.removeItem('pinecone-iconMap'); } catch {}
+        PineconeDB.remove('pinecone-iconMap').catch(() => {});
     },
 
     extractDomain(uri) {

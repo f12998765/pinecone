@@ -17,7 +17,8 @@ const STATIC_ASSETS = [
   '/styles.css',
   '/app.js',
   '/icon-fetcher.js',
-  '/linkding-fetcher.js'
+  '/linkding-fetcher.js',
+  '/db.js'
 ];
 
 // 安装阶段：预缓存静态资源

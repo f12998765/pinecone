@@ -41,6 +41,7 @@ const LinkdingFetcher = {
 
         const tagQuery = filterTags.length > 0 ? filterTags.map(t => '#' + t).join(' ') : '';
         const queryParam = tagQuery ? `&q=${encodeURIComponent(tagQuery)}` : '';
+        let allBookmarks = [];
         let nextUrl = wrap(`${base}/api/bookmarks/?limit=100${queryParam}`);
 
         while (nextUrl) {

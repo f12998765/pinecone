@@ -116,7 +116,7 @@ document.addEventListener('alpine:init', () => {
             return this.services;
         },
 
-        init() {
+        async init() {
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
                 this.$watch('iconSize', v => { if (v > 48) this.iconSize = 48; });
@@ -154,32 +154,29 @@ document.addEventListener('alpine:init', () => {
                 this.iconMap = IconFetcher.getAllCached();
             });
 
-            if (this.dataSource === 'linkding' && !this.linkdingData) {
-                this._loadingLinkding = true;
+            // 先从 IndexedDB 加载关键数据，确保 dataSource 正确后再加载服务
+            const [savedLinkdingData, savedSelectedTags, savedBgDataUrl] = await Promise.all([
+                PineconeDB.get('linkdingData').catch(() => null),
+                PineconeDB.get('linkdingSelectedTags').catch(() => null),
+                PineconeDB.get('bgDataUrl').catch(() => null)
+            ]);
+
+            this._loadingLinkding = false;
+
+            if (savedLinkdingData) {
+                this.linkdingData = savedLinkdingData;
             }
+            if (savedSelectedTags && savedSelectedTags.length > 0) {
+                this.linkdingSelectedTags = savedSelectedTags;
+            }
+            if (savedBgDataUrl) {
+                this.bgDataUrl = savedBgDataUrl;
+            }
+
             this.loadServices();
             this._buildServiceMap();
             this.applyCssVars();
             this.applyBg();
-
-            PineconeDB.get('linkdingData').then(data => {
-                this._loadingLinkding = false;
-                if (data) {
-                    this.linkdingData = data;
-                }
-                this.loadServices();
-            }).catch(() => {
-                this._loadingLinkding = false;
-                this.loadServices();
-            });
-            PineconeDB.get('linkdingSelectedTags').then(tags => {
-                if (tags && tags.length > 0) {
-                    this.linkdingSelectedTags = tags;
-                }
-            }).catch(() => {});
-            PineconeDB.get('bgDataUrl').then(url => {
-                if (url) this.bgDataUrl = url;
-            }).catch(() => {});
 
             this.$watch('linkdingFilterUrls', () => {
                 this.filterUrlsText = JSON.stringify(this.linkdingFilterUrls || [], null, 2);

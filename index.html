@@ -10,17 +10,45 @@
     <meta name="theme-color" content="#ffffff">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="stylesheet" href="styles.css">
+    <style>[x-cloak] { display: none !important; }</style>
 </head>
 
-<body>
+<body x-data="app" x-cloak>
     <div class="container">
         <div id="services-container" class="services-container">
-            <!-- Services will be loaded here -->
+            <template x-if="error">
+                <div class="error-message">
+                    <p>无法加载服务列表，请检查网络连接</p>
+                    <button class="retry-btn" @click="loadServices">重试</button>
+                </div>
+            </template>
+            <template x-for="category in services">
+                <div class="category-section" :key="category.category">
+                    <h2 class="category-title" x-text="category.category"></h2>
+                    <div class="grid">
+                        <template x-for="service in category.services">
+                            <a :key="service.name"
+                               :href="isValidURI(service.uri) ? service.uri : '#'"
+                               class="service-link"
+                               :data-text-position="textPosition"
+                               :class="'demo-effect-' + hoverEffect"
+                               :aria-label="'打开 ' + service.name">
+                                <img class="service-icon"
+                                     :src="service.icon && service.icon.trim() ? service.icon : '/favicon.svg'"
+                                     :alt="service.name"
+                                     loading="lazy"
+                                     @error="imgError">
+                                <span class="service-name" x-show="showNames" x-text="service.name"></span>
+                            </a>
+                        </template>
+                    </div>
+                </div>
+            </template>
         </div>
     </div>
 
     <!-- Settings Button -->
-    <button id="settings-btn" class="settings-btn" aria-label="打开设置">
+    <button id="settings-btn" class="settings-btn" @click="settingsOpen = true" aria-label="打开设置">
         <svg xmlns="http://www.w3.org/2000/svg" class="settings-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -29,222 +57,130 @@
         </svg>
     </button>
 
-    <!-- Settings Modal (Draggable Floating Window) -->
-    <div id="settings-modal" class="settings-modal hidden" role="dialog" aria-modal="true" aria-label="设置面板">
-        <div class="modal-window" id="modal-window">
-            <!-- Draggable Header (macOS style) -->
-            <div class="modal-header" id="modal-drag-handle">
-                <div class="window-controls">
-                    <button class="window-btn close-btn-mac" id="close-settings" title="关闭"><span class="window-btn-icon">✕</span></button>
-                    <button class="window-btn minimize-btn" id="minimize-modal" title="最小化"><span class="window-btn-icon">−</span></button>
-                    <button class="window-btn fullscreen-btn" id="maximize-modal" title="最大化"><span class="window-btn-icon">⤢</span></button>
-                </div>
-                <h3 class="modal-title">设置</h3>
-                <div class="header-spacer"></div>
-            </div>
-
-            <!-- Tab Navigation -->
-            <div class="tab-nav" role="tablist" aria-label="设置分类">
-                <button class="tab-btn active" data-tab="effect" role="tab" aria-selected="true" aria-controls="tab-effect">✨ 悬浮效果</button>
-                <button class="tab-btn" data-tab="icon" role="tab" aria-selected="false" aria-controls="tab-icon">🎯 图标</button>
-                <button class="tab-btn" data-tab="text" role="tab" aria-selected="false" aria-controls="tab-text">📝 文字</button>
-                <button class="tab-btn" data-tab="layout" role="tab" aria-selected="false" aria-controls="tab-layout">📐 布局</button>
-                <button class="tab-btn" data-tab="background" role="tab" aria-selected="false" aria-controls="tab-background">🖼️ 背景</button>
-                <button class="tab-btn" data-tab="reset" role="tab" aria-selected="false" aria-controls="tab-reset">🔄 重置</button>
-            </div>
-
-            <!-- Tab Content -->
-            <div class="tab-content">
-                <!-- Tab 1: 悬浮效果 -->
-                <div class="tab-pane active" id="tab-effect" role="tabpanel" aria-labelledby="tab-effect">
-                    <div class="settings-section">
-                        <p class="section-desc">选择图标悬浮时的动画效果</p>
-                        <div class="effect-grid">
-                            <button class="effect-option" data-effect="1">
-                                <div class="effect-preview">🔍</div>
-                                <span class="effect-label">简洁放大</span>
-                            </button>
-                            <button class="effect-option" data-effect="2">
-                                <div class="effect-preview">🚀</div>
-                                <span class="effect-label">macOS Dock</span>
-                            </button>
-                            <button class="effect-option" data-effect="3">
-                                <div class="effect-preview">💎</div>
-                                <span class="effect-label">卡片高亮</span>
-                            </button>
-                            <button class="effect-option" data-effect="4">
-                                <div class="effect-preview">🌀</div>
-                                <span class="effect-label">旋转动效</span>
-                            </button>
-                            <button class="effect-option" data-effect="5">
-                                <div class="effect-preview">🌈</div>
-                                <span class="effect-label">渐变边框</span>
-                            </button>
-                            <button class="effect-option" data-effect="6">
-                                <div class="effect-preview">⬆️</div>
-                                <span class="effect-label">弹性跳动</span>
-                            </button>
-                            <button class="effect-option" data-effect="7">
-                                <div class="effect-preview">💡</div>
-                                <span class="effect-label">发光光晕</span>
-                            </button>
-                            <button class="effect-option" data-effect="8">
-                                <div class="effect-preview">🔄</div>
-                                <span class="effect-label">翻转显示</span>
-                            </button>
-                            <button class="effect-option" data-effect="9">
-                                <div class="effect-preview">🌊</div>
-                                <span class="effect-label">边框扩散</span>
-                            </button>
-                            <button class="effect-option" data-effect="10">
-                                <div class="effect-preview">📤</div>
-                                <span class="effect-label">阴影提升</span>
-                            </button>
-                            <button class="effect-option" data-effect="11">
-                                <div class="effect-preview">💜</div>
-                                <span class="effect-label">霓虹发光</span>
-                            </button>
-                            <button class="effect-option" data-effect="12">
-                                <div class="effect-preview">🍮</div>
-                                <span class="effect-label">果冻弹跳</span>
-                            </button>
-                            <button class="effect-option" data-effect="13">
-                                <div class="effect-preview">🎨</div>
-                                <span class="effect-label">渐变背景</span>
-                            </button>
-                            <button class="effect-option" data-effect="14">
-                                <div class="effect-preview">💫</div>
-                                <span class="effect-label">涟漪扩散</span>
-                            </button>
-                            <button class="effect-option" data-effect="15">
-                                <div class="effect-preview">🎭</div>
-                                <span class="effect-label">3D 翻转</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab 2: 图标 -->
-                <div class="tab-pane" id="tab-icon" role="tabpanel" aria-labelledby="tab-icon">
-                    <div class="settings-section">
-                        <div class="slider-container">
-                            <label>图标大小</label>
-                            <input type="range" id="icon-size" min="48" max="120" value="80">
-                            <span id="icon-size-value" class="slider-value">80px</span>
-                        </div>
-                        <div class="slider-container">
-                            <label>图标圆角</label>
-                            <input type="range" id="icon-radius" min="0" max="24" value="12">
-                            <span id="icon-radius-value" class="slider-value">12px</span>
-                        </div>
-                        <div class="slider-container">
-                            <label>不透明度</label>
-                            <input type="range" id="icon-opacity" min="0" max="100" value="100">
-                            <span id="icon-opacity-value" class="slider-value">100%</span>
-                        </div>
-                        <div class="slider-container">
-                            <label>图标间距</label>
-                            <input type="range" id="icon-gap" min="8" max="48" value="12">
-                            <span id="icon-gap-value" class="slider-value">12px</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab 3: 文字 -->
-                <div class="tab-pane" id="tab-text" role="tabpanel" aria-labelledby="tab-text">
-                    <div class="settings-section">
-                        <div class="toggle-container">
-                            <label class="toggle-label">显示图标名称</label>
-                            <label class="switch">
-                                <input type="checkbox" id="show-names" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="setting-item">
-                            <label class="setting-label">文字位置</label>
-                            <select id="text-position" class="select-input">
-                                <option value="row">右侧</option>
-                                <option value="column">下方</option>
-                            </select>
-                        </div>
-                        <div class="slider-container">
-                            <label>图标文字大小</label>
-                            <input type="range" id="text-size" min="12" max="24" value="18">
-                            <span id="text-size-value" class="slider-value">18px</span>
-                        </div>
-                        <div class="slider-container">
-                            <label>设置文字大小</label>
-                            <input type="range" id="settings-text-size" min="12" max="18" value="14">
-                            <span id="settings-text-size-value" class="slider-value">14px</span>
-                        </div>
-                        <div class="slider-container">
-                            <label>文字间距</label>
-                            <input type="range" id="text-icon-gap" min="4" max="24" value="12">
-                            <span id="text-icon-gap-value" class="slider-value">12px</span>
-                        </div>
-                        <div class="setting-item">
-                            <label class="setting-label">文字颜色</label>
-                            <div class="color-picker-row">
-                                <input type="text" id="custom-color" class="color-input" placeholder="#000000">
-                                <button id="apply-color" class="btn btn-primary btn-sm">应用</button>
-                            </div>
-                            <div class="color-options" id="color-picker">
-                                <div class="color-option selected" style="background-color: #1a1a1a" data-color="#1a1a1a"></div>
-                                <div class="color-option" style="background-color: #ffffff" data-color="#ffffff"></div>
-                                <div class="color-option" style="background-color: #4CAF50" data-color="#4CAF50"></div>
-                                <div class="color-option" style="background-color: #2196F3" data-color="#2196F3"></div>
-                                <div class="color-option" style="background-color: #9C27B0" data-color="#9C27B0"></div>
-                                <div class="color-option" style="background-color: #FFC107" data-color="#FFC107"></div>
-                                <div class="color-option" style="background-color: #FF5722" data-color="#FF5722"></div>
-                                <div class="color-option" style="background-color: #F44336" data-color="#F44336"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab 4: 布局 -->
-                <div class="tab-pane" id="tab-layout" role="tabpanel" aria-labelledby="tab-layout">
-                    <div class="settings-section">
-                        <div class="slider-container">
-                            <label>最大宽度</label>
-                            <input type="range" id="max-width" min="800" max="1920" value="1421">
-                            <span id="max-width-value" class="slider-value">1421px</span>
-                        </div>
-                        <div class="slider-container">
-                            <label>每行图标数</label>
-                            <input type="range" id="grid-columns" min="1" max="12" value="8">
-                            <span id="grid-columns-value" class="slider-value">8</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab 5: 背景 -->
-                <div class="tab-pane" id="tab-background" role="tabpanel" aria-labelledby="tab-background">
-                    <div class="settings-section">
-                        <div class="setting-item">
-                            <label class="setting-label">背景图片</label>
-                            <input type="file" id="bg-upload" accept="image/*" class="file-input">
-                        </div>
-                        <button id="reset-bg" class="btn btn-danger w-full">
-                            重置背景
+    <!-- Settings Sidebar -->
+    <div class="settings-sidebar" x-show="settingsOpen"
+         x-transition:enter="sidebar-enter"
+         x-transition:enter-start="sidebar-enter-start"
+         x-transition:enter-end="sidebar-enter-end"
+         x-transition:leave="sidebar-leave"
+         x-transition:leave-start="sidebar-leave-start"
+         x-transition:leave-end="sidebar-leave-end"
+         @keydown.escape.window="settingsOpen = false"
+         role="dialog" aria-modal="true" aria-label="设置面板">
+        <div class="sidebar-header">
+            <h3>设置</h3>
+            <button class="sidebar-close" @click="settingsOpen = false">✕</button>
+        </div>
+        <div class="sidebar-body">
+            <h4 class="sidebar-section-title">悬浮效果</h4>
+            <div class="sidebar-section">
+                <div class="effect-pills">
+                    <template x-for="(effect, i) in effects">
+                        <button :key="i" class="effect-pill"
+                                :class="{ selected: hoverEffect === i + 1 }"
+                                @click="hoverEffect = i + 1">
+                            <span x-text="effect.preview"></span>
+                            <span x-text="effect.label"></span>
                         </button>
-                    </div>
+                    </template>
                 </div>
+            </div>
 
-                <!-- Tab 6: 重置 -->
-                <div class="tab-pane" id="tab-reset" role="tabpanel" aria-labelledby="tab-reset">
-                    <div class="settings-section">
-                        <p class="section-desc" style="margin-bottom: 16px;">将所有设置恢复为默认值</p>
-                        <button id="reset-all" class="btn btn-danger w-full">
-                            🔄 重置所有设置
-                        </button>
+            <h4 class="sidebar-section-title">图标</h4>
+            <div class="sidebar-section">
+                <div class="slider-container">
+                    <label>图标大小</label>
+                    <input type="range" x-model.number="iconSize" min="48" max="120">
+                    <span class="slider-value" x-text="iconSize + 'px'"></span>
+                </div>
+                <div class="slider-container">
+                    <label>图标圆角</label>
+                    <input type="range" x-model.number="iconRadius" min="0" max="24">
+                    <span class="slider-value" x-text="iconRadius + 'px'"></span>
+                </div>
+                <div class="slider-container">
+                    <label>不透明度</label>
+                    <input type="range" x-model.number="iconOpacity" min="0" max="100">
+                    <span class="slider-value" x-text="iconOpacity + '%'"></span>
+                </div>
+                <div class="slider-container">
+                    <label>图标间距</label>
+                    <input type="range" x-model.number="iconGap" min="8" max="48">
+                    <span class="slider-value" x-text="iconGap + 'px'"></span>
+                </div>
+            </div>
+
+            <h4 class="sidebar-section-title">文字</h4>
+            <div class="sidebar-section">
+                <div class="toggle-container">
+                    <label class="toggle-label">显示图标名称</label>
+                    <label class="switch">
+                        <input type="checkbox" x-model="showNames">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item setting-row">
+                    <label class="setting-label">文字位置</label>
+                    <select class="select-input" x-model="textPosition">
+                        <option value="row">右侧</option>
+                        <option value="column">下方</option>
+                    </select>
+                </div>
+                <div class="slider-container">
+                    <label>图标文字大小</label>
+                    <input type="range" x-model.number="textSize" min="12" max="24">
+                    <span class="slider-value" x-text="textSize + 'px'"></span>
+                </div>
+                <div class="slider-container">
+                    <label>设置文字大小</label>
+                    <input type="range" x-model.number="settingsTextSize" min="12" max="18">
+                    <span class="slider-value" x-text="settingsTextSize + 'px'"></span>
+                </div>
+                <div class="slider-container">
+                    <label>文字间距</label>
+                    <input type="range" x-model.number="textIconGap" min="4" max="24">
+                    <span class="slider-value" x-text="textIconGap + 'px'"></span>
+                </div>
+                <div class="setting-item setting-row">
+                    <label class="setting-label">文字颜色</label>
+                    <div class="native-color-row">
+                        <input type="color" class="native-color-picker" x-model="textColor">
+                        <span class="color-hex-label" x-text="textColor"></span>
                     </div>
                 </div>
             </div>
+
+            <h4 class="sidebar-section-title">布局</h4>
+            <div class="sidebar-section">
+                <div class="slider-container">
+                    <label>最大宽度</label>
+                    <input type="range" x-model.number="maxWidth" min="800" max="1920">
+                    <span class="slider-value" x-text="maxWidth + 'px'"></span>
+                </div>
+                <div class="slider-container">
+                    <label>每行图标数</label>
+                    <input type="range" x-model.number="gridColumns" min="1" max="12">
+                    <span class="slider-value" x-text="gridColumns"></span>
+                </div>
+            </div>
+
+            <h4 class="sidebar-section-title">背景</h4>
+            <div class="sidebar-section">
+                <div class="setting-item">
+                    <label class="setting-label">背景图片</label>
+                    <input type="file" accept="image/*" class="file-input" @change="handleBgUpload">
+                </div>
+                <button class="btn btn-danger w-full" @click="resetBg">重置背景</button>
+            </div>
+
+            <button class="section-reset" @click="resetAll">重置所有设置</button>
         </div>
     </div>
 
-    <script src="app.js" defer></script>
+    <script defer src="app.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
 </body>
 
 </html>

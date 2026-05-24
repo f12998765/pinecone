@@ -13,7 +13,11 @@ const STATIC_ASSETS = [
   '/apple-touch-icon.png',
   '/favicon-96x96.png',
   '/web-app-manifest-192x192.png',
-  '/web-app-manifest-512x512.png'
+  '/web-app-manifest-512x512.png',
+  '/styles.css',
+  '/app.js',
+  '/icon-fetcher.js',
+  '/linkding-fetcher.js'
 ];
 
 // 安装阶段：预缓存静态资源
@@ -32,13 +36,7 @@ self.addEventListener('activate', event => {
         keys.filter(k => k !== STATIC_CACHE && k !== DATA_CACHE)
             .map(k => caches.delete(k))
       )
-    ).then(() => {
-      return self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
-          client.postMessage({ action: 'newContentAvailable' });
-        });
-      });
-    })
+    )
   );
   self.clients.claim();
 });
@@ -65,6 +63,11 @@ function backgroundUpdateCache(cache, request) {
 // 请求拦截
 self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
+
+  // Linkding API 请求不经过 Service Worker
+  if (requestUrl.pathname.includes('/api/')) {
+    return;
+  }
 
   // 针对 services.json：网络优先，失败回退缓存
   if (requestUrl.pathname.endsWith('/services.json')) {

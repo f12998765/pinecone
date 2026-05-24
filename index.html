@@ -15,26 +15,44 @@
 
 <body x-data="app" x-cloak>
     <div class="container">
-        <div id="services-container" class="services-container">
+        <div class="services-container"
+             @touchstart="handleContainerTouchStart"
+             @touchend="handleContainerTouchEnd"
+             @touchmove="handleContainerTouchMove"
+             @click="handleContainerClick"
+             @contextmenu="handleContainerContextMenu">
             <template x-if="error">
                 <div class="error-message">
                     <p>无法加载服务列表，请检查网络连接</p>
                     <button class="retry-btn" @click="loadServices">重试</button>
                 </div>
             </template>
-            <template x-for="category in services">
+            <template x-if="!error && services.length === 0">
+                <div class="empty-state">
+                    <p>暂无书签数据</p>
+                    <p class="empty-hint">在设置中切换到 Linkding 并获取书签，或检查网络连接</p>
+                </div>
+            </template>
+            <template x-if="!error && services.length > 0 && activeServices.length === 0">
+                <div class="empty-state">
+                    <p>所有书签已被过滤</p>
+                    <p class="empty-hint">在设置中管理已屏蔽的域名</p>
+                </div>
+            </template>
+            <template x-for="category in activeServices">
                 <div class="category-section" :key="category.category">
                     <h2 class="category-title" x-text="category.category"></h2>
                     <div class="grid">
                         <template x-for="service in category.services">
-                            <a :key="service.name"
-                               :href="isValidURI(service.uri) ? service.uri : '#'"
-                               class="service-link"
-                               :data-text-position="textPosition"
-                               :class="'demo-effect-' + hoverEffect"
-                               :aria-label="'打开 ' + service.name">
-                                <img class="service-icon"
-                                     :src="service.icon && service.icon.trim() ? service.icon : '/favicon.svg'"
+                             <a :key="service.name"
+                                :href="isValidURI(service.uri) ? service.uri : '#'"
+                                class="service-link"
+                                :data-text-position="textPosition"
+                                :class="'demo-effect-' + hoverEffect"
+                                :aria-label="'打开 ' + service.name"
+                                :data-uri="service.uri">
+                                 <img class="service-icon"
+                                      :src="getServiceIcon(service.uri) || service.icon || '/favicon.svg'"
                                      :alt="service.name"
                                      loading="lazy"
                                      @error="imgError">
@@ -57,6 +75,90 @@
         </svg>
     </button>
 
+    <!-- Context Menu -->
+    <div x-show="contextMenu.show"
+         class="context-menu-overlay"
+         @click.self="hideContextMenu"
+         @contextmenu.self.prevent="hideContextMenu">
+        <div :style="`left: ${contextMenu.x}px; top: ${contextMenu.y}px;`"
+             class="context-menu">
+            <button class="context-menu-item" @click="filterUrlFromMenu">
+                <span>🚫</span>
+                <span>删除此网站</span>
+            </button>
+            <button class="context-menu-item" @click="customIconFromMenu">
+                <span>🎨</span>
+                <span>自定义图标</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Custom Icon Modal -->
+    <div x-show="customIconModal.show" class="modal-overlay" @click.self="cancelCustomIcon" @contextmenu.self.prevent="cancelCustomIcon" @keydown.escape.window="cancelCustomIcon">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span>自定义图标</span>
+                <button class="modal-close" @click="cancelCustomIcon">✕</button>
+            </div>
+            <div class="modal-body">
+                <label class="modal-label">书签地址</label>
+                <div class="modal-uri" x-text="customIconModal.uri"></div>
+
+                <label class="modal-label">图标 URL</label>
+                <input type="url" class="select-input" x-model="customIconModal.url" placeholder="https://..." style="margin-bottom:12px">
+
+                <label class="modal-label">或上传图片</label>
+                <input type="file" accept="image/*" class="file-input" @change="handleCustomIconUpload" style="margin-bottom:4px">
+
+                <template x-if="customIconModal.url && (customIconModal.url.startsWith('data:') || isValidURI(customIconModal.url))">
+                    <div class="modal-preview">
+                        <img :src="customIconModal.url" class="modal-preview-img">
+                    </div>
+                </template>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @click="cancelCustomIcon">取消</button>
+                <button class="btn btn-primary" @click="saveCustomIcon" :disabled="!customIconModal.url?.trim()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tag Picker Modal -->
+    <div x-show="tagModalOpen" class="modal-overlay" @click.self="tagModalOpen = false" @keydown.escape.window="tagModalOpen = false" x-transition.opacity.duration.200ms>
+        <div class="modal-card tag-picker-card">
+            <div class="modal-header">
+                <span>选择标签</span>
+                <div class="modal-header-actions">
+                    <button class="modal-clear-btn" @click="linkdingSelectedTags = []; tagSearch = ''" x-show="linkdingSelectedTags.length > 0">清除</button>
+                    <button class="modal-close" @click="tagModalOpen = false">✕</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="tag-picker-search">
+                    <svg class="search-icon" width="14" height="14" viewBox="0 0 14 14"><circle cx="6" cy="6" r="5" fill="none" stroke="#8e8e93" stroke-width="1.5"/><path d="M10 10l3 3" stroke="#8e8e93" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <input type="text" class="search-input" x-model="tagSearch" placeholder="搜索标签...">
+                </div>
+                <div class="tag-pills-wrap">
+                    <template x-for="tag in linkdingTags.filter(t => !tagSearch || t.name.includes(tagSearch))" :key="tag.id">
+                        <div class="color-pill" @click="toggleTag(tag.name)"
+                             :style="{
+                                 background: linkdingSelectedTags.includes(tag.name) ? tagColor(tag.name) : '#f2f2f7',
+                                 borderColor: linkdingSelectedTags.includes(tag.name) ? tagColor(tag.name) : '#e5e5ea',
+                                 color: linkdingSelectedTags.includes(tag.name) ? '#fff' : '#1d1d1f',
+                                 boxShadow: linkdingSelectedTags.includes(tag.name) ? '0 2px 6px rgba(0,0,0,0.12)' : 'none'
+                             }">
+                            <span class="color-pill-name" x-text="tag.name"></span>
+                            <span class="color-pill-count" x-text="tag.count"></span>
+                        </div>
+                    </template>
+                    <div x-show="tagSearch && linkdingTags.filter(t => t.name.includes(tagSearch)).length === 0" class="tag-search-empty">
+                        无匹配标签
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Sidebar -->
     <div class="settings-sidebar" x-show="settingsOpen"
          x-transition:enter="sidebar-enter"
@@ -72,6 +174,70 @@
             <button class="sidebar-close" @click="settingsOpen = false">✕</button>
         </div>
         <div class="sidebar-body">
+            <h4 class="sidebar-section-title">数据</h4>
+            <div class="sidebar-section">
+                <div class="setting-item setting-row">
+                    <label class="setting-label">数据来源</label>
+                    <div class="effect-pills" style="max-width:150px">
+                        <button class="effect-pill" :class="{ selected: dataSource === 'local' }" @click="dataSource = 'local'">本地</button>
+                        <button class="effect-pill" :class="{ selected: dataSource === 'linkding' }" @click="dataSource = 'linkding'">Linkding</button>
+                    </div>
+                </div>
+                <template x-if="dataSource === 'linkding'">
+                    <div x-init="filterUrlsText = JSON.stringify(linkdingFilterUrls || [], null, 2); customIconsText = JSON.stringify(linkdingCustomIcons || {}, null, 2)">
+                        <div class="setting-item">
+                            <label class="setting-label">API 地址</label>
+                            <input type="url" class="select-input" x-model="linkdingUrl" placeholder="https://linkding.example.com">
+                        </div>
+                        <div class="setting-item">
+                            <label class="setting-label">API 令牌</label>
+                            <input type="password" class="select-input" x-model="linkdingToken" placeholder="输入令牌">
+                        </div>
+                        <div class="setting-item" style="border-bottom:none">
+                            <button class="btn btn-primary w-full" @click="handleTagButton" :disabled="linkdingTagsLoading || !linkdingUrl || !linkdingToken">
+                                选择标签
+                                <span x-show="linkdingSelectedTags.length" style="opacity:0.7" x-text="'(' + linkdingSelectedTags.length + ')'"></span>
+                            </button>
+                        </div>
+                        <div class="toggle-container">
+                            <label class="toggle-label">API 代理</label>
+                            <label class="switch">
+                                <input type="checkbox" x-model="linkdingProxyEnabled">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <template x-if="linkdingProxyEnabled">
+                            <div class="setting-item">
+                                <label class="setting-label" style="font-size:0.85em">代理地址</label>
+                                <input type="url" class="select-input" x-model="linkdingProxy" placeholder="https://corsproxy.io/?url={url}" style="font-size:0.85em">
+                            </div>
+                        </template>
+                        <div class="btn-row">
+                            <button class="btn btn-secondary" @click="testLinkdingConnection" :disabled="linkdingLoading" x-text="linkdingLoading ? '测试中...' : '测试连接'"></button>
+                            <button class="btn btn-primary" @click="syncLinkding" :disabled="linkdingLoading" x-text="linkdingLoading ? '获取中...' : '获取书签'"></button>
+                        </div>
+                        <template x-if="services.length > 0">
+                            <div class="btn-row" style="margin-top:4px">
+                                <button class="btn btn-secondary" @click="refreshIcons">刷新图标</button>
+                                <button class="btn btn-danger" @click="clearLinkdingData">清除数据</button>
+                            </div>
+                        </template>
+                        <div x-show="linkdingError" class="linkding-status" x-text="linkdingError" :class="{ 'status-success': linkdingError.includes('成功') }"></div>
+
+                        <div class="setting-item">
+                            <label class="setting-label">已屏蔽地址</label>
+                            <textarea class="textarea-input" x-model="filterUrlsText" rows="2" placeholder='["https://example.com/page"]'></textarea>
+                            <button class="btn btn-primary w-full" style="margin-top:6px" @click="applyFilterUrls">应用</button>
+                        </div>
+                        <div class="setting-item" style="border-bottom:none">
+                            <label class="setting-label">自定义图标</label>
+                            <textarea class="textarea-input" x-model="customIconsText" rows="2" placeholder='{"https://example.com/page": "https://..."}'></textarea>
+                            <button class="btn btn-primary w-full" style="margin-top:6px" @click="applyCustomIcons">应用</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
             <h4 class="sidebar-section-title">悬浮效果</h4>
             <div class="sidebar-section">
                 <div class="effect-pills">
@@ -177,6 +343,8 @@
         </div>
     </div>
 
+    <script defer src="icon-fetcher.js"></script>
+    <script defer src="linkding-fetcher.js"></script>
     <script defer src="app.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3/dist/cdn.min.js"></script>

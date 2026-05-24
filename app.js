@@ -72,6 +72,49 @@ document.addEventListener('alpine:init', () => {
         settingsTextSize: Alpine.$persist(14).as('pinecone-settingsTextSize'),
         bgDataUrl: Alpine.$persist(null).as('pinecone-bg'),
 
+        // Linkding
+        dataSource: Alpine.$persist('local').as('pinecone-dataSource'),
+        linkdingUrl: Alpine.$persist('').as('pinecone-linkdingUrl'),
+        linkdingToken: Alpine.$persist('').as('pinecone-linkdingToken'),
+        linkdingProxy: Alpine.$persist('https://corsproxy.io/?url={url}').as('pinecone-linkdingProxy'),
+        linkdingProxyEnabled: Alpine.$persist(false).as('pinecone-linkdingProxyEnabled'),
+        linkdingData: Alpine.$persist(null).as('pinecone-linkdingData'),
+        linkdingLoading: false,
+        linkdingError: '',
+        linkdingTags: [],
+        linkdingSelectedTags: Alpine.$persist([]).as('pinecone-linkdingSelectedTags'),
+        linkdingTagsLoading: false,
+        tagModalOpen: false,
+        tagSearch: '',
+
+        // Resolved icon map (populated only in linkding mode)
+        iconMap: {},
+
+        // Linkding filter & custom icons
+        linkdingFilterUrls: Alpine.$persist([]).as('pinecone-linkdingFilterUrls'),
+        linkdingCustomIcons: Alpine.$persist({}).as('pinecone-linkdingCustomUrls'),
+        contextMenu: { show: false, x: 0, y: 0, service: null },
+        filterUrlsText: '',
+        customIconsText: '',
+        customIconModal: { show: false, uri: '', url: '' },
+        _lpTimer: null,
+        _suppressNextClick: false,
+        _refreshTotal: 0,
+        _refreshDone: 0,
+
+        get activeServices() {
+            if (this.dataSource === 'linkding' && this.linkdingFilterUrls?.length) {
+                const blocked = new Set(this.linkdingFilterUrls);
+                return this.services
+                    .map(cat => ({
+                        ...cat,
+                        services: cat.services.filter(s => !blocked.has(s.uri))
+                    }))
+                    .filter(cat => cat.services.length > 0);
+            }
+            return this.services;
+        },
+
         init() {
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
@@ -90,25 +133,342 @@ document.addEventListener('alpine:init', () => {
                 }
             }
 
+            // Migrate old single tag to multi-select
+            const oldTag = localStorage.getItem('pinecone-linkdingTag');
+            if (oldTag && this.linkdingSelectedTags.length === 0) {
+                try { const t = JSON.parse(oldTag); if (t) this.linkdingSelectedTags = [t]; } catch {}
+            }
+
+            if (!this.linkdingProxy) {
+                this.linkdingProxy = 'https://corsproxy.io/?url={url}';
+            }
+            IconFetcher.init();
+            this.iconMap = IconFetcher.getAllCached();
+            IconFetcher.onResolved((domain, url) => {
+                this.iconMap[domain] = url;
+                if (this._refreshTotal > 0) {
+                    this._refreshDone++;
+                    this.linkdingError = `正在刷新图标 ${this._refreshDone}/${this._refreshTotal}`;
+                    if (this._refreshDone >= this._refreshTotal) {
+                        this._refreshTotal = 0;
+                        this._refreshDone = 0;
+                        this.linkdingError = '图标缓存已清除，重新获取成功';
+                    }
+                }
+            });
+
             this.loadServices();
             this.applyCssVars();
             this.applyBg();
+
+            this.$watch('linkdingFilterUrls', () => {
+                this.filterUrlsText = JSON.stringify(this.linkdingFilterUrls || [], null, 2);
+            });
+            this.$watch('linkdingCustomIcons', () => {
+                this.customIconsText = JSON.stringify(this.linkdingCustomIcons || {}, null, 2);
+            });
 
             const numericKeys = ['iconSize','iconRadius','iconOpacity','iconGap','textSize',
                 'textColor','maxWidth','textIconGap','textPosition','gridColumns','settingsTextSize'];
             numericKeys.forEach(k => this.$watch(k, () => this.applyCssVars()));
             this.$watch('bgDataUrl', () => this.applyBg());
+            this.$watch('dataSource', () => this.loadServices());
+            this.$watch('services', () => this._buildServiceMap());
         },
 
         loadServices() {
             this.error = false;
+            if (this.dataSource === 'linkding') {
+                if (this.linkdingData && this.linkdingData.length > 0) {
+                    this.services = this._filterInvalid(this.linkdingData);
+                    this.linkdingError = '';
+                } else {
+                    this.services = [];
+                    this.linkdingError = '尚未同步 Linkding 数据';
+                }
+                return;
+            }
             fetch('services.json')
                 .then(r => { if (!r.ok) throw Error(); return r.json(); })
-                .then(d => { this.services = d; })
+                .then(d => { this.services = this._filterInvalid(d); })
                 .catch(() => {
-                    this.services = INLINE_SERVICES;
-                    if (!INLINE_SERVICES.length) this.error = true;
+                    this.services = this._filterInvalid(INLINE_SERVICES);
+                    if (!this.services.length) this.error = true;
                 });
+        },
+
+        _buildServiceMap() {
+            const map = {};
+            for (const cat of this.services) {
+                for (const s of cat.services) {
+                    if (s.uri) map[s.uri] = s;
+                }
+            }
+            this._serviceMap = map;
+        },
+
+        _serviceByUri(uri) {
+            return this._serviceMap?.[uri] || null;
+        },
+
+        _filterInvalid(services) {
+            return services
+                .map(cat => ({
+                    ...cat,
+                    services: cat.services.filter(s => this.isValidURI(s.uri))
+                }))
+                .filter(cat => cat.services.length > 0);
+        },
+
+        async testLinkdingConnection() {
+            const urlErr = LinkdingFetcher.validateUrl(this.linkdingUrl);
+            if (urlErr) { this.linkdingError = urlErr; return; }
+            const tokenErr = LinkdingFetcher.validateToken(this.linkdingToken);
+            if (tokenErr) { this.linkdingError = tokenErr; return; }
+
+            this.linkdingLoading = true;
+            this.linkdingError = '正在测试连接...';
+            try {
+                const base = this.linkdingUrl.replace(/\/+$/, '');
+                const testUrl = this.linkdingProxyEnabled && this.linkdingProxy
+                    ? this.linkdingProxy.replace('{url}', encodeURIComponent(`${base}/api/bookmarks/?limit=1`))
+                    : `${base}/api/bookmarks/?limit=1`;
+                const res = await fetch(testUrl, {
+                    headers: { Authorization: `Token ${this.linkdingToken}` }
+                });
+                if (!res.ok) throw new Error(res.status === 401 ? '令牌无效' : `状态码 ${res.status}`);
+                this.linkdingError = '连接成功';
+            } catch (err) {
+                this.linkdingError = '连接失败: ' + err.message;
+            }
+            this.linkdingLoading = false;
+        },
+
+        refreshIcons() {
+            IconFetcher.refreshCache();
+            this.iconMap = {};
+            const domains = new Set();
+            this.services.forEach(cat => cat.services.forEach(s => {
+                const d = IconFetcher.extractDomain(s.uri);
+                if (d) domains.add(d);
+            }));
+            this._refreshTotal = domains.size;
+            this._refreshDone = 0;
+            if (domains.size === 0) {
+                this.linkdingError = '没有需要刷新的图标';
+                return;
+            }
+            this.linkdingError = `正在刷新图标 0/${this._refreshTotal}`;
+            IconFetcher.resolveDomains([...domains]);
+        },
+
+        clearLinkdingData() {
+            if (!confirm('确定清除所有 Linkding 数据和图标缓存？')) return;
+            this.linkdingData = null;
+            IconFetcher.refreshCache();
+            this.iconMap = {};
+            this.loadServices();
+            this.linkdingError = 'Linkding 数据与图标缓存已清除';
+        },
+
+        tagColor(name) {
+            let h = 0;
+            for (let i = 0; i < name.length; i++) h = (name.charCodeAt(i) + ((h << 5) - h)) | 0;
+            const colors = ['#ff2d55','#ff9500','#ffcc02','#34c759','#007aff','#5856d6','#af52de','#ff6482','#00c7be','#32ade6'];
+            return colors[Math.abs(h) % colors.length];
+        },
+
+        async handleTagButton() {
+            if (this.linkdingTags.length > 0) { this.tagModalOpen = true; return; }
+            await this.fetchLinkdingTags();
+            if (this.linkdingTags.length > 0) this.tagModalOpen = true;
+        },
+
+        toggleTag(name) {
+            this.linkdingSelectedTags = this.linkdingSelectedTags.includes(name)
+                ? this.linkdingSelectedTags.filter(t => t !== name)
+                : [...this.linkdingSelectedTags, name];
+        },
+
+        async fetchLinkdingTags() {
+            const urlErr = LinkdingFetcher.validateUrl(this.linkdingUrl);
+            if (urlErr) { this.linkdingError = urlErr; return; }
+            const tokenErr = LinkdingFetcher.validateToken(this.linkdingToken);
+            if (tokenErr) { this.linkdingError = tokenErr; return; }
+
+            this.linkdingTagsLoading = true;
+            try {
+                const tags = await LinkdingFetcher.fetchTags(
+                    this.linkdingUrl,
+                    this.linkdingToken,
+                    this.linkdingProxyEnabled ? this.linkdingProxy : ''
+                );
+                this.linkdingTags = tags.sort((a, b) => b.count - a.count);
+            } catch (err) {
+                this.linkdingError = '获取标签失败: ' + err.message;
+            }
+            this.linkdingTagsLoading = false;
+        },
+
+        syncLinkding() {
+            const urlErr = LinkdingFetcher.validateUrl(this.linkdingUrl);
+            if (urlErr) { this.linkdingError = urlErr; return; }
+            const tokenErr = LinkdingFetcher.validateToken(this.linkdingToken);
+            if (tokenErr) { this.linkdingError = tokenErr; return; }
+
+            this.linkdingLoading = true;
+            this.linkdingError = '';
+
+            LinkdingFetcher.fetchBookmarks(this.linkdingUrl, this.linkdingToken, this.linkdingSelectedTags || [], this.linkdingProxyEnabled ? this.linkdingProxy : '')
+                .then(data => {
+                    this.linkdingData = data;
+                    this.services = this._filterInvalid(data);
+                    this.linkdingLoading = false;
+                    const count = data.reduce((s, c) => s + c.services.length, 0);
+                    this.linkdingError = `同步成功，共 ${count} 个书签`;
+
+                    const domains = new Set();
+                    data.forEach(cat => cat.services.forEach(s => {
+                        const d = IconFetcher.extractDomain(s.uri);
+                        if (d) domains.add(d);
+                    }));
+                    if (domains.size > 0) {
+                        IconFetcher.resolveDomains([...domains]);
+                    }
+                })
+                .catch(err => {
+                    this.linkdingError = err.message;
+                    this.linkdingLoading = false;
+                });
+        },
+
+        getServiceIcon(uri) {
+            if (this.dataSource !== 'linkding') return null;
+            if (!uri) return null;
+            if (this.linkdingCustomIcons?.[uri]) return this.linkdingCustomIcons[uri];
+            const domain = IconFetcher.extractDomain(uri);
+            return domain ? (this.iconMap[domain] || null) : null;
+        },
+
+        handleContainerTouchStart(event) {
+            if (this.dataSource !== 'linkding') return;
+            const link = event.target.closest('.service-link');
+            if (!link) return;
+            const touch = event.touches[0];
+            if (!touch) return;
+            const cx = touch.clientX, cy = touch.clientY;
+            clearTimeout(this._lpTimer);
+            this._lpTimer = setTimeout(() => {
+                this._lpTimer = null;
+                const service = this._serviceByUri(link.dataset.uri);
+                if (!service) return;
+                const menuW = 180, menuH = 80;
+                let x = cx, y = cy;
+                if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 8;
+                if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 8;
+                this.contextMenu = { show: true, x, y, service };
+                this._suppressNextClick = true;
+            }, 500);
+        },
+
+        handleContainerTouchEnd() {
+            clearTimeout(this._lpTimer);
+            this._lpTimer = null;
+        },
+
+        handleContainerTouchMove() {
+            clearTimeout(this._lpTimer);
+            this._lpTimer = null;
+        },
+
+        handleContainerClick(event) {
+            if (this._suppressNextClick) {
+                this._suppressNextClick = false;
+                event.preventDefault();
+            }
+        },
+
+        handleContainerContextMenu(event) {
+            if (this.dataSource !== 'linkding') return;
+            const link = event.target.closest('.service-link');
+            if (!link) return;
+            event.preventDefault();
+            const service = this._serviceByUri(link.dataset.uri);
+            if (!service) return;
+            const menuW = 180, menuH = 80;
+            let x = event.clientX, y = event.clientY;
+            if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 8;
+            if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 8;
+            this.contextMenu = { show: true, x, y, service };
+        },
+
+        hideContextMenu() {
+            this.contextMenu.show = false;
+        },
+
+        filterUrlFromMenu() {
+            const uri = this.contextMenu.service.uri;
+            if (uri && !this.linkdingFilterUrls.includes(uri)) {
+                this.linkdingFilterUrls = [...this.linkdingFilterUrls, uri];
+                this.filterUrlsText = JSON.stringify(this.linkdingFilterUrls, null, 2);
+            }
+            this.hideContextMenu();
+        },
+
+        customIconFromMenu() {
+            const uri = this.contextMenu.service.uri;
+            if (!uri) return;
+            this.customIconModal = { show: true, uri, url: this.linkdingCustomIcons[uri] || '' };
+            this.hideContextMenu();
+        },
+
+        saveCustomIcon() {
+            const { uri, url } = this.customIconModal;
+            if (!uri || !url?.trim()) return;
+            this.linkdingCustomIcons = { ...this.linkdingCustomIcons, [uri]: url.trim() };
+            this.customIconsText = JSON.stringify(this.linkdingCustomIcons, null, 2);
+            this.customIconModal.show = false;
+            const fileInput = document.querySelector('.modal-card input[type="file"]');
+            if (fileInput) fileInput.value = '';
+        },
+
+        cancelCustomIcon() {
+            this.customIconModal.show = false;
+            const fileInput = document.querySelector('.modal-card input[type="file"]');
+            if (fileInput) fileInput.value = '';
+        },
+
+        handleCustomIconUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                this.customIconModal.url = ev.target.result;
+                event.target.value = '';
+            };
+            reader.readAsDataURL(file);
+        },
+
+        applyFilterUrls() {
+            try {
+                const parsed = JSON.parse(this.filterUrlsText);
+                if (!Array.isArray(parsed)) throw new Error();
+                this.linkdingFilterUrls = parsed;
+                this.linkdingError = '已屏蔽地址已更新';
+            } catch {
+                alert('格式错误：请输入有效的 JSON 数组，例如 ["https://example.com/page"]');
+            }
+        },
+
+        applyCustomIcons() {
+            try {
+                const parsed = JSON.parse(this.customIconsText);
+                if (typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error();
+                this.linkdingCustomIcons = parsed;
+                this.linkdingError = '自定义图标已更新';
+            } catch {
+                alert('格式错误：请输入有效的 JSON 对象，例如 {"https://example.com/page": "https://..."}');
+            }
         },
 
         applyCssVars() {
@@ -205,11 +565,7 @@ if ('serviceWorker' in navigator) {
             }
         };
 
-        navigator.serviceWorker.addEventListener('message', event => {
-            if (event.data && event.data.action === 'newContentAvailable') {
-                if (confirm('内容已更新，是否立即刷新页面？')) window.location.reload();
-            }
-        });
+
     }).catch(err => {
         console.error('ServiceWorker 注册失败:', err);
     });

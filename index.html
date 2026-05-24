@@ -181,11 +181,11 @@
                         <form action="https://linkding.example.com" @submit.prevent>
                             <div class="setting-item">
                                 <label class="setting-label">API 地址</label>
-                                <input type="url" class="select-input" x-model="linkdingUrl" name="linkdingUrl" autocomplete="username" placeholder="https://linkding.example.com">
-                            </div>
-                            <div class="setting-item">
-                                <label class="setting-label">API 令牌</label>
-                                <input type="password" class="select-input" x-model="linkdingToken" name="linkdingToken" autocomplete="current-password" placeholder="输入令牌">
+                                <input type="text" class="select-input" x-model="linkdingUrl" id="linkding-url" name="username" autocomplete="username" placeholder="https://linkding.example.com">
+                             </div>
+                             <div class="setting-item">
+                                 <label class="setting-label">API 令牌</label>
+                                 <input type="password" class="select-input" x-model="linkdingToken" id="linkding-token" name="password" autocomplete="current-password" placeholder="输入令牌">
                             </div>
                         </form>
                         <div class="toggle-container toggle-container-full">

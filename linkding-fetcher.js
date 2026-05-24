@@ -39,10 +39,17 @@ const LinkdingFetcher = {
             return proxy.includes('{url}') ? proxy.replace(/\{url\}/g, encoded) : proxy + encoded;
         };
 
-        const tagQuery = filterTags.length > 0 ? filterTags.map(t => '#' + t).join(' ') : '';
-        const queryParam = tagQuery ? `&q=${encodeURIComponent(tagQuery)}` : '';
         let allBookmarks = [];
-        let nextUrl = wrap(`${base}/api/bookmarks/?limit=100${queryParam}`);
+        // 基础 URL（带分页参数）
+        let baseUrl = `${base}/api/bookmarks/?limit=100`;
+
+        // 如果有过滤标签，添加 q 参数实现 OR 查询
+        if (filterTags.length > 0) {
+            const query = filterTags.map(tag => `#${tag}`).join(' or ');
+            baseUrl += `&q=${encodeURIComponent(query)}`;
+        }
+
+        let nextUrl = wrap(baseUrl);
 
         while (nextUrl) {
             const res = await fetch(nextUrl, {
@@ -59,19 +66,25 @@ const LinkdingFetcher = {
             nextUrl = data.next ? wrap(data.next) : null;
         }
 
-        return this._toServices(allBookmarks, filterTags);
+        // 转换为分类结构：每个标签一个分类，书签出现在其所有标签的分类下
+        return this._toServices(allBookmarks);
     },
 
-    _toServices(bookmarks, filterTags) {
+    _toServices(bookmarks) {
         const groups = {};
 
         for (const bm of bookmarks) {
-            const remaining = (bm.tag_names || []).filter(t => !filterTags.includes(t));
-            const categories = remaining.length > 0 ? remaining : ['未分类'];
+            const tags = bm.tag_names || [];
 
-            for (const category of categories) {
+            if (tags.length === 0) {
+                const category = '未分类';
                 if (!groups[category]) groups[category] = [];
                 groups[category].push(this._toServiceItem(bm));
+            } else {
+                for (const tag of tags) {
+                    if (!groups[tag]) groups[tag] = [];
+                    groups[tag].push(this._toServiceItem(bm));
+                }
             }
         }
 

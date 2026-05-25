@@ -93,48 +93,67 @@ body {
     transition: transform 0.2s ease;
 }
 
-/* Settings Button */
-.settings-btn {
+/* Floating Actions */
+.floating-actions {
     position: fixed;
     bottom: 1.5rem;
     right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    z-index: 50;
+}
+
+.action-btn {
+    width: 48px;
+    height: 48px;
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(8px);
-    padding: 0.75rem;
     border-radius: 50%;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border: none;
     cursor: pointer;
     opacity: 0;
     transition: all 0.3s ease;
-    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.settings-btn:hover {
+.action-btn:hover {
     background: #f3f4f6;
+}
+
+.action-btn:focus-visible {
+    opacity: 1;
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+body:hover .action-btn {
+    opacity: 1;
+}
+
+/* Mobile: always visible action buttons */
+@media (hover: none) {
+    .action-btn {
+        opacity: 1;
+    }
+}
+
+.source-btn {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.settings-btn {
+    padding: 0;
 }
 
 .settings-icon {
     width: 1.5rem;
     height: 1.5rem;
     color: #374151;
-}
-
-body:hover .settings-btn {
-    opacity: 1;
-}
-
-/* Mobile: always visible settings button */
-@media (hover: none) {
-    .settings-btn {
-        opacity: 1;
-    }
-}
-
-.settings-btn:focus-visible {
-    opacity: 1;
-    outline: 2px solid #3b82f6;
-    outline-offset: 2px;
 }
 
 /* Settings Sidebar */
@@ -458,13 +477,20 @@ input:checked+.slider:before {
         overflow-x: hidden;
     }
 
-    /* 移动端设置按钮 - 始终可见 */
-    .settings-btn {
-        opacity: 1 !important;
+    /* 移动端浮动按钮 - 始终可见 */
+    .floating-actions {
         bottom: 0.75rem;
         right: 0.75rem;
-        padding: 0.7rem;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        opacity: 1 !important;
         -webkit-tap-highlight-color: transparent;
+    }
+
+    .source-btn {
+        font-size: 1.1rem;
     }
 
     .settings-icon {
@@ -568,7 +594,7 @@ input:checked+.slider:before {
     /* 移动端触摸优化 - 防止300ms点击延迟 */
     .effect-pill,
     .btn,
-    .settings-btn,
+    .action-btn,
     select,
     input[type="range"] {
         touch-action: manipulation;
@@ -596,7 +622,8 @@ input:checked+.slider:before {
     .service-link {
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
-    }}
+    }
+}
 
 .category-title {
     color: var(--text-color);

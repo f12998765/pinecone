@@ -1,48 +1,3 @@
-// Inline services data (fallback for file:// access where fetch is blocked by CORS)
-const INLINE_SERVICES = [
-  {"category":"✨ 常用","services":[
-    {"name":"青空","uri":"https://main.elk.zone/","icon":"/icons/sky.jpg"},
-    {"name":"Link","uri":"https://link.xizero.com/","icon":"/icons/linkding.webp"},
-    {"name":"Twitter","uri":"https://x.com/home","icon":"/icons/twitter.png"},
-    {"name":"Inoreader","uri":"https://www.inoreader.com/all_articles","icon":"/icons/inoreader.png"},
-    {"name":"Hacker News","uri":"https://news.ycombinator.com/","icon":"/icons/hackernews.png"},
-    {"name":"其乐","uri":"https://keylol.com/","icon":"/icons/keylol.png"},
-    {"name":"Switch520","uri":"https://www.gamer520.com/","icon":"/icons/ns.png"},
-    {"name":"Reddit","uri":"https://www.reddit.com/","icon":"/icons/reddit.png"}]},
-  {"category":"🌙 娱乐","services":[
-    {"name":"哔哩哔哩","uri":"https://www.bilibili.com/","icon":"/icons/bilibili.png"},
-    {"name":"抖音","uri":"https://www.douyin.com/","icon":"/icons/douyin.png"},
-    {"name":"小红书","uri":"https://www.xiaohongshu.com/","icon":"/icons/redbook.png"},
-    {"name":"NGA","uri":"https://nga.178.com/","icon":"/icons/nga.png"},
-    {"name":"YouTube","uri":"https://www.youtube.com/","icon":"/icons/youtube.png"},
-    {"name":"Instagram","uri":"https://www.instagram.com/","icon":"/icons/instagram.png"},
-    {"name":"Twitch","uri":"https://www.twitch.tv/","icon":"/icons/twitch.png"},
-    {"name":"Discord","uri":"https://discord.com/channels/@me","icon":"/icons/discord.png"}]},
-  {"category":"⚡️ 工具","services":[
-    {"name":"DeepSeek","uri":"https://chat.deepseek.com/","icon":"/icons/deepseek.png"},
-    {"name":"DuckDuckGo AI","uri":"https://duck.ai/","icon":"/icons/duckduckgo.png"},
-    {"name":"Microsoft Copilot","uri":"https://copilot.microsoft.com/","icon":"/icons/copilot-color.svg"},
-    {"name":"Gemini","uri":"https://gemini.google.com/app","icon":"/icons/gemini.png"},
-    {"name":"Qwen","uri":"https://chat.qwen.ai/","icon":"/icons/qwen.png"},
-    {"name":"OutLook","uri":"https://outlook.live.com/mail/0/inbox/","icon":"/icons/outlook.png"},
-    {"name":"OneDrive","uri":"https://onedrive.live.com/","icon":"/icons/onedrive.png"},
-    {"name":"临时邮箱","uri":"https://www.emailtick.com/zh","icon":"/icons/tempemail.png"}]},
-  {"category":"🎮 游戏","services":[
-    {"name":"Todo.txt","uri":"https://xizero.com/todo.txt/","icon":"/icons/todo.jpg"},
-    {"name":"FFXIV Wiki","uri":"https://ff14.huijiwiki.com/wiki/%E9%A6%96%E9%A1%B5","icon":"/icons/ffxiv_wiki.webp"},
-    {"name":"艾欧泽亚售楼中心","uri":"https://house.ffxiv.cyou/","icon":"/icons/ffxiv_house.png"},
-    {"name":"Soulframe Wiki","uri":"https://wiki.avakot.org/","icon":"/icons/soulframe_wiki.png"},
-    {"name":"Warframe 中文维基","uri":"https://warframe.huijiwiki.com/wiki/Mainpage","icon":"/icons/warframe_huiji_wiki.webp"},
-    {"name":"Warframe Wiki","uri":"https://wiki.warframe.com/","icon":"/icons/warframe_wiki.webp"},
-    {"name":"Warframe Market","uri":"https://warframe.market/zh-hans/","icon":"/icons/wm.webp"},
-    {"name":"Warframe 掉宝","uri":"https://warframestreams.lol/","icon":"/icons/warframestreams.png"}]},
-  {"category":"🍀 社区","services":[
-    {"name":"v2ex","uri":"https://www.v2ex.com/","icon":"/icons/v2ex.png"},
-    {"name":"Linux do","uri":"https://linux.do/","icon":"/icons/linuxdo.webp"},
-    {"name":"NodeSeek","uri":"https://www.nodeseek.com/","icon":"/icons/nodeseek.png"},
-    {"name":"Github","uri":"https://www.github.com/","icon":"/icons/github.png"},
-    {"name":"Bangumi","uri":"https://bgm.tv/","icon":"/icons/bgmtv.png"}]}
-];
 
 // Alpine component
 document.addEventListener('alpine:init', () => {
@@ -154,15 +109,18 @@ document.addEventListener('alpine:init', () => {
                 this.iconMap = IconFetcher.getAllCached();
             });
 
-            // 先从 IndexedDB 加载关键数据，确保 dataSource 正确后再加载服务
-            const [savedLinkdingData, savedSelectedTags, savedBgDataUrl] = await Promise.all([
+            // 先从 IndexedDB 加载全部持久化数据（含 dataSource），确保首次渲染就正确
+            this._loadingLinkding = true;
+            const [savedDataSource, savedLinkdingData, savedSelectedTags, savedBgDataUrl] = await Promise.all([
+                PineconeDB.get('pinecone-dataSource').catch(() => null),
                 PineconeDB.get('linkdingData').catch(() => null),
                 PineconeDB.get('linkdingSelectedTags').catch(() => null),
                 PineconeDB.get('bgDataUrl').catch(() => null)
             ]);
 
-            this._loadingLinkding = false;
-
+            if (savedDataSource && (savedDataSource === 'local' || savedDataSource === 'linkding')) {
+                this.dataSource = savedDataSource;
+            }
             if (savedLinkdingData) {
                 this.linkdingData = savedLinkdingData;
             }
@@ -172,8 +130,9 @@ document.addEventListener('alpine:init', () => {
             if (savedBgDataUrl) {
                 this.bgDataUrl = savedBgDataUrl;
             }
+            this._loadingLinkding = false;
 
-            this.loadServices();
+            await this.loadServices();
             this._buildServiceMap();
             this.applyCssVars();
             this.applyBg();
@@ -189,11 +148,13 @@ document.addEventListener('alpine:init', () => {
                 'textColor','maxWidth','textIconGap','textPosition','gridColumns','settingsTextSize'];
             cssVarKeys.forEach(k => this.$watch(k, () => this.applyCssVars()));
             this.$watch('bgDataUrl', () => this.applyBg());
-            this.$watch('dataSource', () => this.loadServices());
+            this.$watch('dataSource', (val, oldVal) => {
+                if (val !== oldVal) this.loadServices(true);
+            });
             this.$watch('services', () => this._buildServiceMap());
         },
 
-        loadServices() {
+        async loadServices(fromUserAction) {
             this.error = false;
             if (this.dataSource === 'linkding') {
                 if (this.linkdingData && this.linkdingData.length > 0) {
@@ -201,19 +162,23 @@ document.addEventListener('alpine:init', () => {
                     this.linkdingError = '';
                 } else {
                     this.services = [];
-                    if (!this._loadingLinkding) {
+                    if (fromUserAction && !this._loadingLinkding) {
                         this.linkdingError = '尚未同步 Linkding 数据';
                     }
                 }
                 return;
             }
-            fetch('services.json')
-                .then(r => { if (!r.ok) throw Error(); return r.json(); })
-                .then(d => { this.services = this._filterInvalid(d); })
-                .catch(() => {
-                    this.services = this._filterInvalid(INLINE_SERVICES);
-                    if (!this.services.length) this.error = true;
-                });
+            this.services = [];
+            try {
+                const r = await fetch('services.json');
+                if (!r.ok) throw Error();
+                const d = await r.json();
+                if (this.dataSource !== 'local') return;
+                this.services = this._filterInvalid(d);
+            } catch {
+                if (this.dataSource !== 'local') return;
+                if (!this.services.length) this.error = true;
+            }
         },
 
         _buildServiceMap() {
@@ -237,6 +202,10 @@ document.addEventListener('alpine:init', () => {
                     services: cat.services.filter(s => this.isValidURI(s.uri))
                 }))
                 .filter(cat => cat.services.length > 0);
+        },
+
+        toggleDataSource() {
+            this.dataSource = this.dataSource === 'local' ? 'linkding' : 'local';
         },
 
         refreshIcons() {

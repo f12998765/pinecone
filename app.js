@@ -55,10 +55,10 @@ document.addEventListener('alpine:init', () => {
         // Resolved icon map (populated only in linkding mode)
         iconMap: {},
 
-        // Linkding filter & custom icons
-        linkdingFilterUrls: Alpine.$persist([]).as('pinecone-linkdingFilterUrls'),
-        linkdingCustomIcons: Alpine.$persist({}).as('pinecone-linkdingCustomIcons'),
-        linkdingIconSources: Alpine.$persist([]).as('pinecone-linkdingIconSources'),
+        // Linkding filter & custom icons (manually persisted to IndexedDB)
+        linkdingFilterUrls: [],
+        linkdingCustomIcons: {},
+        linkdingIconSources: [],
         iconSourcesText: '[]',
         contextMenu: { show: false, x: 0, y: 0, service: null },
         filterUrlsText: '[]',
@@ -121,13 +121,17 @@ document.addEventListener('alpine:init', () => {
                 this.iconMap = IconFetcher.getAllCached();
             });
 
-            // 先从 IndexedDB 加载全部持久化数据（含 dataSource），确保首次渲染就正确
+            // 先从 IndexedDB 加载全部持久化数据，确保首次渲染就正确
             this._loadingLinkding = true;
-            const [savedDataSource, savedLinkdingData, savedSelectedTags, savedBgDataUrl] = await Promise.all([
+            const [savedDataSource, savedLinkdingData, savedSelectedTags, savedBgDataUrl,
+                    savedFilterUrls, savedCustomIcons, savedIconSources] = await Promise.all([
                 PineconeDB.get('pinecone-dataSource').catch(() => null),
                 PineconeDB.get('linkdingData').catch(() => null),
                 PineconeDB.get('linkdingSelectedTags').catch(() => null),
-                PineconeDB.get('bgDataUrl').catch(() => null)
+                PineconeDB.get('bgDataUrl').catch(() => null),
+                PineconeDB.get('pinecone-linkdingFilterUrls').catch(() => null),
+                PineconeDB.get('pinecone-linkdingCustomIcons').catch(() => null),
+                PineconeDB.get('pinecone-linkdingIconSources').catch(() => null)
             ]);
 
             if (savedDataSource && (savedDataSource === 'local' || savedDataSource === 'linkding')) {
@@ -142,6 +146,18 @@ document.addEventListener('alpine:init', () => {
             if (savedBgDataUrl) {
                 this.bgDataUrl = savedBgDataUrl;
             }
+            if (savedFilterUrls) {
+                this.linkdingFilterUrls = savedFilterUrls;
+            }
+            if (savedCustomIcons) {
+                this.linkdingCustomIcons = savedCustomIcons;
+            }
+            if (savedIconSources) {
+                this.linkdingIconSources = savedIconSources;
+            }
+            this.filterUrlsText = JSON.stringify(this.linkdingFilterUrls || [], null, 2);
+            this.customIconsText = JSON.stringify(this.linkdingCustomIcons || {}, null, 2);
+            this.iconSourcesText = (this.linkdingIconSources || []).join('\n');
             this._loadingLinkding = false;
 
             await this.loadServices();
@@ -158,7 +174,6 @@ document.addEventListener('alpine:init', () => {
             this.$watch('linkdingIconSources', () => {
                 this.iconSourcesText = (this.linkdingIconSources || []).join('\n');
             });
-            this.iconSourcesText = (this.linkdingIconSources || []).join('\n');
 
             const cssVarKeys = ['iconSize','iconRadius','iconOpacity','iconGap','textSize',
                 'textColor','maxWidth','textIconGap','textPosition','gridColumns','settingsTextSize'];
@@ -406,8 +421,10 @@ document.addEventListener('alpine:init', () => {
         filterUrlFromMenu() {
             const uri = this.contextMenu.service.uri;
             if (uri && !this.linkdingFilterUrls.includes(uri)) {
-                this.linkdingFilterUrls = [...this.linkdingFilterUrls, uri];
-                this.filterUrlsText = JSON.stringify(this.linkdingFilterUrls, null, 2);
+                const newUrls = [...this.linkdingFilterUrls, uri];
+                this.linkdingFilterUrls = newUrls;
+                this.filterUrlsText = JSON.stringify(newUrls, null, 2);
+                PineconeDB.set('pinecone-linkdingFilterUrls', newUrls).catch(() => {});
             }
             this.hideContextMenu();
         },
@@ -438,8 +455,10 @@ document.addEventListener('alpine:init', () => {
         saveCustomIcon() {
             const { uri, url } = this.customIconModal;
             if (!uri || !url?.trim()) return;
-            this.linkdingCustomIcons = { ...this.linkdingCustomIcons, [uri]: url.trim() };
-            this.customIconsText = JSON.stringify(this.linkdingCustomIcons, null, 2);
+            const newIcons = { ...this.linkdingCustomIcons, [uri]: url.trim() };
+            this.linkdingCustomIcons = newIcons;
+            this.customIconsText = JSON.stringify(newIcons, null, 2);
+            PineconeDB.set('pinecone-linkdingCustomIcons', newIcons).catch(() => {});
             this.customIconModal.show = false;
             const fileInput = document.querySelector('.modal-card input[type="file"]');
             if (fileInput) fileInput.value = '';
@@ -468,6 +487,7 @@ document.addEventListener('alpine:init', () => {
                 const parsed = JSON.parse(this.filterUrlsText);
                 if (!Array.isArray(parsed)) throw new Error();
                 this.linkdingFilterUrls = parsed;
+                PineconeDB.set('pinecone-linkdingFilterUrls', parsed).catch(() => {});
                 this.linkdingError = '已屏蔽地址已更新';
             } catch {
                 alert('格式错误：请输入有效的 JSON 数组，例如 ["https://example.com/page"]');
@@ -479,6 +499,7 @@ document.addEventListener('alpine:init', () => {
                 const parsed = JSON.parse(this.customIconsText);
                 if (typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error();
                 this.linkdingCustomIcons = parsed;
+                PineconeDB.set('pinecone-linkdingCustomIcons', parsed).catch(() => {});
                 this.linkdingError = '自定义图标已更新';
             } catch {
                 alert('格式错误：请输入有效的 JSON 对象，例如 {"https://example.com/page": "https://..."}');
@@ -488,6 +509,7 @@ document.addEventListener('alpine:init', () => {
         applyIconSources() {
             const lines = this.iconSourcesText.split('\n').map(s => s.trim()).filter(Boolean);
             this.linkdingIconSources = lines;
+            PineconeDB.set('pinecone-linkdingIconSources', lines).catch(() => {});
             this.linkdingError = '自定义图标源已更新';
         },
 
@@ -576,6 +598,7 @@ document.addEventListener('alpine:init', () => {
             PineconeDB.remove('linkdingData').catch(() => {});
             PineconeDB.remove('pinecone-linkdingFilterUrls').catch(() => {});
             PineconeDB.remove('pinecone-linkdingCustomIcons').catch(() => {});
+            PineconeDB.remove('pinecone-linkdingIconSources').catch(() => {});
             PineconeDB.remove('linkdingSelectedTags').catch(() => {});
             PineconeDB.remove('pinecone-linkdingSelectedTags').catch(() => {});
             PineconeDB.remove('pinecone-linkdingUrl').catch(() => {});

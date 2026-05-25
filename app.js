@@ -40,7 +40,6 @@ document.addEventListener('alpine:init', () => {
         linkdingSelectedTags: [],
         linkdingTagsLoading: false,
         tagModalOpen: false,
-        tagSearch: '',
 
         RAINBOW: ['#ff8a80','#ffab91','#ffd54f','#aed581','#80cbc4','#90caf9','#b39ddb','#f48fb1'],
 
@@ -59,10 +58,12 @@ document.addEventListener('alpine:init', () => {
         // Linkding filter & custom icons
         linkdingFilterUrls: Alpine.$persist([]).as('pinecone-linkdingFilterUrls'),
         linkdingCustomIcons: Alpine.$persist({}).as('pinecone-linkdingCustomIcons'),
+        linkdingIconSources: Alpine.$persist([]).as('pinecone-linkdingIconSources'),
+        iconSourcesText: '[]',
         contextMenu: { show: false, x: 0, y: 0, service: null },
         filterUrlsText: '[]',
         customIconsText: '{}',
-        customIconModal: { show: false, uri: '', url: '' },
+        customIconModal: { show: false, uri: '', domain: '', url: '', iconOptions: [], iconDone: false, iconProgress: '' },
         _lpTimer: null,
         _suppressNextClick: false,
         _refreshTotal: 0,
@@ -154,6 +155,10 @@ document.addEventListener('alpine:init', () => {
             this.$watch('linkdingCustomIcons', () => {
                 this.customIconsText = JSON.stringify(this.linkdingCustomIcons || {}, null, 2);
             });
+            this.$watch('linkdingIconSources', () => {
+                this.iconSourcesText = (this.linkdingIconSources || []).join('\n');
+            });
+            this.iconSourcesText = (this.linkdingIconSources || []).join('\n');
 
             const cssVarKeys = ['iconSize','iconRadius','iconOpacity','iconGap','textSize',
                 'textColor','maxWidth','textIconGap','textPosition','gridColumns','settingsTextSize'];
@@ -410,8 +415,24 @@ document.addEventListener('alpine:init', () => {
         customIconFromMenu() {
             const uri = this.contextMenu.service.uri;
             if (!uri) return;
-            this.customIconModal = { show: true, uri, url: this.linkdingCustomIcons[uri] || '' };
+            const domain = IconFetcher.extractDomain(uri) || '';
+            this.customIconModal = { show: true, uri, domain, url: this.linkdingCustomIcons[uri] || '', iconOptions: [], iconDone: false, iconProgress: '' };
             this.hideContextMenu();
+            if (domain) {
+                const customSources = (this.linkdingIconSources || []).filter(Boolean);
+                IconFetcher.fetchAllIconOptions(domain, {
+                    onProgress: label => { this.customIconModal.iconProgress = label; },
+                    onItem: item => {
+                        this.customIconModal.iconOptions = [...this.customIconModal.iconOptions, item];
+                    },
+                    customSources,
+                }).then(() => {
+                    this.customIconModal.iconDone = true;
+                    if (!this.customIconModal.iconProgress) this.customIconModal.iconProgress = '';
+                });
+            } else {
+                this.customIconModal.iconDone = true;
+            }
         },
 
         saveCustomIcon() {
@@ -462,6 +483,12 @@ document.addEventListener('alpine:init', () => {
             } catch {
                 alert('格式错误：请输入有效的 JSON 对象，例如 {"https://example.com/page": "https://..."}');
             }
+        },
+
+        applyIconSources() {
+            const lines = this.iconSourcesText.split('\n').map(s => s.trim()).filter(Boolean);
+            this.linkdingIconSources = lines;
+            this.linkdingError = '自定义图标源已更新';
         },
 
         applyCssVars() {
@@ -540,8 +567,10 @@ document.addEventListener('alpine:init', () => {
             this.linkdingSelectedTags = [];
             this.linkdingFilterUrls = [];
             this.linkdingCustomIcons = {};
+            this.linkdingIconSources = [];
             this.filterUrlsText = '[]';
             this.customIconsText = '{}';
+            this.iconSourcesText = '';
             
             PineconeDB.remove('bgDataUrl').catch(() => {});
             PineconeDB.remove('linkdingData').catch(() => {});

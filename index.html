@@ -113,6 +113,21 @@
                 <label class="modal-label">图标 URL</label>
                 <input type="url" class="select-input" x-model="customIconModal.url" placeholder="https://..." style="margin-bottom:12px">
 
+                <label class="modal-label">可选图标</label>
+                <div class="icon-picker-grid" x-show="customIconModal.iconOptions?.length">
+                    <template x-for="(item, i) in customIconModal.iconOptions" :key="i">
+                        <div class="icon-picker-item" :class="{ selected: customIconModal.url === item.url }" @click="customIconModal.url = item.url" :title="item.label">
+                            <img :src="item.url" class="icon-picker-img" @error="event.target.src = '/favicon.svg'">
+                            <span class="icon-picker-domain" x-text="item.label"></span>
+                        </div>
+                    </template>
+                </div>
+                <div x-show="customIconModal.domain && !customIconModal.iconDone" class="icon-picker-loading">
+                    <span x-show="customIconModal.iconProgress">正在获取 <span class="icon-progress-label" x-text="customIconModal.iconProgress"></span> ...</span>
+                    <span x-show="!customIconModal.iconProgress">正在获取...</span>
+                </div>
+                <div x-show="customIconModal.domain && customIconModal.iconDone && !customIconModal.iconOptions?.length" class="icon-picker-loading done">未获取到图标</div>
+
                 <label class="modal-label">或上传图片</label>
                 <input type="file" accept="image/*" class="file-input" @change="handleCustomIconUpload" style="margin-bottom:4px">
 
@@ -225,6 +240,12 @@
                             <label class="setting-label">自定义图标</label>
                             <textarea class="select-input textarea-input" x-model="customIconsText" rows="2" placeholder='{"https://example.com/page": "https://..."}'></textarea>
                             <button class="btn btn-primary w-full" style="margin-top:10px" @click="applyCustomIcons" x-show="customIconsText !== JSON.stringify(linkdingCustomIcons, null, 2)">应用</button>
+                        </div>
+                        <div class="setting-item" style="border-bottom:none;margin-top:8px">
+                            <label class="setting-label">自定义图标源</label>
+                            <div class="setting-desc">每行一个 URL，用 {domain} 占位，仅在自定义图标时使用</div>
+                            <textarea class="select-input textarea-input" x-model="iconSourcesText" rows="3" placeholder="https://icons.example.com/{domain}/icon.png"></textarea>
+                            <button class="btn btn-primary w-full" style="margin-top:10px" @click="applyIconSources" x-show="iconSourcesText !== (linkdingIconSources || []).join('\n')">应用</button>
                         </div>
                     </div>
                 </template>

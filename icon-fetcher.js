@@ -133,6 +133,34 @@ const IconFetcher = {
         });
     },
 
+    async fetchAllIconOptions(domain, { onProgress, onItem, customSources }) {
+        const cb = `_=${Date.now()}`;
+        const done = () => { if (onProgress) onProgress(''); };
+
+        const trySource = async (url, label) => {
+            if (onProgress) onProgress(label);
+            const ok = await this._checkImg(url);
+            if (ok && onItem) onItem({ url, label });
+        };
+
+        await trySource(`https://twenty-icons.com/${domain}?${cb}`, 'twenty-icons');
+        await trySource(`https://favicon.im/${domain}?throw-error-on-404=true&larger=true&${cb}`, 'favicon.im');
+
+        if (onProgress) onProgress('favicon.vemetric');
+        const vemetricUrl = await this._tryVemetric(domain);
+        if (vemetricUrl && onItem) onItem({ url: vemetricUrl, label: 'favicon.vemetric' });
+
+        await trySource(`https://${domain}/apple-touch-icon.png?${cb}`, 'apple-touch-icon');
+
+        for (const [i, src] of (customSources || []).entries()) {
+            const separator = src.includes('?') ? '&' : '?';
+            const url = src.replace(/\{domain\}/g, domain) + separator + `_cb=${Date.now()}_${i}`;
+            await trySource(url, `源 ${i + 1}`);
+        }
+
+        done();
+    },
+
     refreshCache() {
         this._cache = {};
         this._resolving = {};

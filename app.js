@@ -270,6 +270,9 @@ document.addEventListener('alpine:init', () => {
                     this.linkdingProxyEnabled ? this.linkdingProxy : ''
                 );
                 this.linkdingTags = tags.sort((a, b) => b.count - a.count);
+                const validNames = new Set(tags.map(t => t.name));
+                this.linkdingSelectedTags = this.linkdingSelectedTags.filter(t => validNames.has(t));
+                PineconeDB.set('linkdingSelectedTags', [...this.linkdingSelectedTags]).catch(() => {});
             } catch (err) {
                 this.linkdingError = '获取标签失败: ' + err.message;
             }

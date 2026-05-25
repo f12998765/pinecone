@@ -206,7 +206,6 @@
                                 <input type="url" class="select-input" x-model="linkdingProxy" placeholder="https://corsproxy.io/?url={url}">
                             </div>
                         </template>
-                        <hr class="section-divider">
                         <div class="ld-row">
                             <button class="ld-btn ld-btn-outline ld-btn-tag" @click="handleTagButton" :disabled="linkdingTagsLoading || !linkdingUrl || !linkdingToken">
                                 选择标签
@@ -220,7 +219,6 @@
                             <button class="ld-btn ld-btn-outline ld-btn-danger" @click="clearLinkdingData" :disabled="!services.length">清除数据</button>
                         </div>
                         <div x-show="linkdingError" class="linkding-status" x-text="linkdingError" :class="{ 'status-success': linkdingError.includes('成功') }"></div>
-                        <hr class="section-divider">
                         <div class="setting-item">
                             <label class="setting-label">已屏蔽地址</label>
                             <textarea class="select-input textarea-input" x-model="filterUrlsText" rows="2" placeholder='["https://example.com/page"]'></textarea>

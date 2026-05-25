@@ -49,8 +49,8 @@ document.addEventListener('alpine:init', () => {
         linkdingFilterUrls: Alpine.$persist([]).as('pinecone-linkdingFilterUrls'),
         linkdingCustomIcons: Alpine.$persist({}).as('pinecone-linkdingCustomIcons'),
         contextMenu: { show: false, x: 0, y: 0, service: null },
-        filterUrlsText: '',
-        customIconsText: '',
+        filterUrlsText: '[]',
+        customIconsText: '{}',
         customIconModal: { show: false, uri: '', url: '' },
         _lpTimer: null,
         _suppressNextClick: false,
@@ -524,8 +524,8 @@ document.addEventListener('alpine:init', () => {
             this.linkdingSelectedTags = [];
             this.linkdingFilterUrls = [];
             this.linkdingCustomIcons = {};
-            this.filterUrlsText = '';
-            this.customIconsText = '';
+            this.filterUrlsText = '[]';
+            this.customIconsText = '{}';
             
             PineconeDB.remove('bgDataUrl').catch(() => {});
             PineconeDB.remove('linkdingData').catch(() => {});

@@ -194,7 +194,7 @@
                                  <input type="password" class="select-input" x-model="linkdingToken" id="linkding-token" name="password" autocomplete="current-password" placeholder="输入令牌">
                             </div>
                         </form>
-                        <div class="toggle-container toggle-container-full">
+                        <div class="toggle-container" style="border-bottom:none">
                             <label class="toggle-label">API 代理</label>
                             <label class="switch">
                                 <input type="checkbox" x-model="linkdingProxyEnabled">
@@ -211,7 +211,7 @@
                                 选择标签
                                 <span class="ld-badge" x-show="linkdingSelectedTags.length && !linkdingTagsLoading" x-text="linkdingSelectedTags.length"></span>
                             </button>
-                            <button class="ld-btn ld-btn-outline ld-btn-sync" @click="syncLinkding" :disabled="linkdingLoading">
+                            <button class="ld-btn ld-btn-outline ld-btn-sync" @click="syncLinkding" :disabled="linkdingLoading || !linkdingUrl || !linkdingToken">
                                 <span x-show="!linkdingLoading">获取书签</span>
                                 <span x-show="linkdingLoading">同步中</span>
                             </button>
@@ -219,15 +219,15 @@
                             <button class="ld-btn ld-btn-outline ld-btn-danger" @click="clearLinkdingData" :disabled="!services.length">清除数据</button>
                         </div>
                         <div x-show="linkdingError" class="linkding-status" x-text="linkdingError" :class="{ 'status-success': linkdingError.includes('成功') }"></div>
-                        <div class="setting-item">
+                        <div class="setting-item" style="margin-top:8px">
                             <label class="setting-label">已屏蔽地址</label>
                             <textarea class="select-input textarea-input" x-model="filterUrlsText" rows="2" placeholder='["https://example.com/page"]'></textarea>
-                            <button class="btn btn-primary w-full" style="margin-top:6px" @click="applyFilterUrls" x-show="filterUrlsText !== JSON.stringify(linkdingFilterUrls, null, 2)">应用</button>
+                            <button class="btn btn-primary w-full" style="margin-top:10px" @click="applyFilterUrls" x-show="filterUrlsText !== JSON.stringify(linkdingFilterUrls, null, 2)">应用</button>
                         </div>
                         <div class="setting-item" style="border-bottom:none">
                             <label class="setting-label">自定义图标</label>
                             <textarea class="select-input textarea-input" x-model="customIconsText" rows="2" placeholder='{"https://example.com/page": "https://..."}'></textarea>
-                            <button class="btn btn-primary w-full" style="margin-top:6px" @click="applyCustomIcons" x-show="customIconsText !== JSON.stringify(linkdingCustomIcons, null, 2)">应用</button>
+                            <button class="btn btn-primary w-full" style="margin-top:10px" @click="applyCustomIcons" x-show="customIconsText !== JSON.stringify(linkdingCustomIcons, null, 2)">应用</button>
                         </div>
                     </div>
                 </template>
@@ -239,7 +239,6 @@
                     <button :key="i" class="effect-pill"
                             :class="{ selected: hoverEffect === i + 1 }"
                             @click="hoverEffect = i + 1">
-                        <span x-text="effect.preview"></span>
                         <span x-text="effect.label"></span>
                     </button>
                 </template>

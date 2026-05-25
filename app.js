@@ -42,6 +42,17 @@ document.addEventListener('alpine:init', () => {
         tagModalOpen: false,
         tagSearch: '',
 
+        RAINBOW: ['#ff8a80','#ffab91','#ffd54f','#aed581','#80cbc4','#90caf9','#b39ddb','#f48fb1'],
+
+        tagOrder(name) {
+            const idx = this.linkdingSelectedTags.indexOf(name);
+            return idx >= 0 ? idx + 1 : 0;
+        },
+
+        badgeColor(order) {
+            return this.RAINBOW[(order - 1) % this.RAINBOW.length];
+        },
+
         // Resolved icon map (populated only in linkding mode)
         iconMap: {},
 
@@ -229,10 +240,13 @@ document.addEventListener('alpine:init', () => {
         clearLinkdingData() {
             if (!confirm('确定清除所有 Linkding 数据和图标缓存？')) return;
             this.linkdingData = null;
+            this.linkdingTags = [];
+            this.linkdingSelectedTags = [];
+            this.services = [];
             PineconeDB.remove('linkdingData').catch(() => {});
+            PineconeDB.remove('linkdingSelectedTags').catch(() => {});
             IconFetcher.refreshCache();
             this.iconMap = {};
-            this.loadServices();
             this.linkdingError = 'Linkding 数据与图标缓存已清除';
         },
 
@@ -290,6 +304,8 @@ document.addEventListener('alpine:init', () => {
 
             LinkdingFetcher.fetchBookmarks(this.linkdingUrl, this.linkdingToken, this.linkdingSelectedTags, this.linkdingProxyEnabled ? this.linkdingProxy : '')
                 .then(data => {
+                    const orderMap = new Map(this.linkdingSelectedTags.map((n, i) => [n, i]));
+                    data.sort((a, b) => (orderMap.get(a.category) ?? 999) - (orderMap.get(b.category) ?? 999));
                     this.linkdingData = data;
                     this.services = this._filterInvalid(data);
                     PineconeDB.set('linkdingData', data).catch(() => {});

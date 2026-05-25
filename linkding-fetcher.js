@@ -66,12 +66,13 @@ const LinkdingFetcher = {
             nextUrl = data.next ? wrap(data.next) : null;
         }
 
-        // 转换为分类结构：每个标签一个分类，书签出现在其所有标签的分类下
-        return this._toServices(allBookmarks);
+        // 转换为分类结构：每个标签一个分类，书签出现在其所有已选标签的分类下
+        return this._toServices(allBookmarks, filterTags);
     },
 
-    _toServices(bookmarks) {
+    _toServices(bookmarks, filterTags) {
         const groups = {};
+        const tagFilter = filterTags?.length ? new Set(filterTags) : null;
 
         for (const bm of bookmarks) {
             const tags = bm.tag_names || [];
@@ -82,6 +83,7 @@ const LinkdingFetcher = {
                 groups[category].push(this._toServiceItem(bm));
             } else {
                 for (const tag of tags) {
+                    if (tagFilter && !tagFilter.has(tag)) continue;
                     if (!groups[tag]) groups[tag] = [];
                     groups[tag].push(this._toServiceItem(bm));
                 }

@@ -140,15 +140,12 @@
                 </div>
             </div>
             <div class="modal-body">
-                <div class="tag-pills-wrap">
+            <div class="tag-pills-wrap">
                     <template x-for="tag in linkdingTags" :key="tag.id">
                         <div class="color-pill" @click="toggleTag(tag.name)"
-                             :style="{
-                                 background: linkdingSelectedTags.includes(tag.name) ? tagColor(tag.name) : '#f2f2f7',
-                                 borderColor: linkdingSelectedTags.includes(tag.name) ? tagColor(tag.name) : '#e5e5ea',
-                                 color: linkdingSelectedTags.includes(tag.name) ? '#fff' : '#1d1d1f',
-                                 boxShadow: linkdingSelectedTags.includes(tag.name) ? '0 2px 6px rgba(0,0,0,0.12)' : 'none'
-                             }">
+                             :class="{ selected: linkdingSelectedTags.includes(tag.name) }"
+                             :style="linkdingSelectedTags.includes(tag.name) ? { color: tagColor(tag.name), boxShadow: '0 0 16px 3px ' + tagColor(tag.name) + '30, inset 0 0 12px 2px ' + tagColor(tag.name) + '1a' } : {}">
+                            <span class="tag-order-badge" x-show="linkdingSelectedTags.includes(tag.name)" x-text="tagOrder(tag.name)" :style="{ background: badgeColor(tagOrder(tag.name)), boxShadow: '0 0 10px 2px ' + badgeColor(tagOrder(tag.name)) + '50, inset 0 0 6px 1px rgba(255,255,255,0.25)' }"></span>
                             <span class="color-pill-name" x-text="tag.name"></span>
                             <span class="color-pill-count" x-text="tag.count"></span>
                         </div>

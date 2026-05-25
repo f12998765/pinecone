@@ -84,23 +84,6 @@ document.addEventListener('alpine:init', () => {
         },
 
         async init() {
-            const isMobile = window.innerWidth <= 768;
-            if (isMobile) {
-                this.$watch('iconSize', v => { if (v > 48) this.iconSize = 48; });
-                this.$watch('iconGap', v => { if (v > 10) this.iconGap = 10; });
-                this.$watch('textSize', v => { if (v > 15) this.textSize = 15; });
-                this.$watch('textIconGap', v => { if (v > 10) this.textIconGap = 10; });
-                this.$watch('gridColumns', v => { if (v > 5) this.gridColumns = 5; });
-                this.$watch('maxWidth', v => { if (v > window.innerWidth - 32) this.maxWidth = window.innerWidth - 32; });
-                // Apply caps immediately for initial values
-                if (this.iconSize > 48) this.iconSize = 48;
-                if (this.iconGap > 10) this.iconGap = 10;
-                if (this.textSize > 15) this.textSize = 15;
-                if (this.textIconGap > 10) this.textIconGap = 10;
-                if (this.gridColumns > 5) this.gridColumns = 5;
-                if (this.maxWidth > window.innerWidth - 32) this.maxWidth = window.innerWidth - 32;
-            }
-
             if (!this.linkdingProxy) {
                 this.linkdingProxy = 'https://corsproxy.io/?url={url}';
             }
@@ -183,6 +166,8 @@ document.addEventListener('alpine:init', () => {
                 if (val !== oldVal) this.loadServices(true);
             });
             this.$watch('services', () => this._buildServiceMap());
+
+            window.addEventListener('resize', () => this.applyCssVars());
         },
 
         async loadServices(fromUserAction) {
@@ -515,16 +500,17 @@ document.addEventListener('alpine:init', () => {
 
         applyCssVars() {
             const r = document.documentElement;
-            r.style.setProperty('--icon-size', this.iconSize + 'px');
+            const mb = window.innerWidth <= 768;
+            r.style.setProperty('--icon-size', (mb ? Math.min(this.iconSize, 48) : this.iconSize) + 'px');
             r.style.setProperty('--icon-radius', this.iconRadius + 'px');
             r.style.setProperty('--icon-opacity', this.iconOpacity / 100);
-            r.style.setProperty('--icon-gap', this.iconGap + 'px');
-            r.style.setProperty('--text-size', this.textSize + 'px');
+            r.style.setProperty('--icon-gap', (mb ? Math.min(this.iconGap, 10) : this.iconGap) + 'px');
+            r.style.setProperty('--text-size', (mb ? Math.min(this.textSize, 15) : this.textSize) + 'px');
             r.style.setProperty('--text-color', this.textColor);
-            r.style.setProperty('--max-width', this.maxWidth + 'px');
-            r.style.setProperty('--text-icon-gap', this.textIconGap + 'px');
+            r.style.setProperty('--max-width', (mb ? Math.min(this.maxWidth, window.innerWidth - 32) : this.maxWidth) + 'px');
+            r.style.setProperty('--text-icon-gap', (mb ? Math.min(this.textIconGap, 10) : this.textIconGap) + 'px');
             r.style.setProperty('--text-position', this.textPosition);
-            r.style.setProperty('--grid-columns', this.gridColumns);
+            r.style.setProperty('--grid-columns', mb ? Math.min(this.gridColumns, 5) : this.gridColumns);
             r.style.setProperty('--settings-text-size', this.settingsTextSize + 'px');
         },
 
@@ -561,18 +547,17 @@ document.addEventListener('alpine:init', () => {
         },
 
         resetAll() {
-            const isMobile = window.innerWidth <= 768;
-            this.iconSize = isMobile ? 48 : 64;
+            this.iconSize = 64;
             this.iconRadius = 12;
             this.iconOpacity = 100;
-            this.iconGap = isMobile ? 8 : 12;
-            this.textSize = isMobile ? 14 : 18;
+            this.iconGap = 12;
+            this.textSize = 18;
             this.textColor = '#1a1a1a';
             this.maxWidth = 1421;
             this.showNames = true;
-            this.textIconGap = isMobile ? 8 : 12;
+            this.textIconGap = 12;
             this.textPosition = 'column';
-            this.gridColumns = isMobile ? 4 : 8;
+            this.gridColumns = 8;
             this.hoverEffect = 2;
             this.settingsTextSize = 14;
             this.bgDataUrl = null;

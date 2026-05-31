@@ -8,8 +8,10 @@
     <title>松果</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffffff">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="apple-touch-icon" href="assets/images/apple-touch-icon.png">
+    <link rel="icon" href="assets/images/favicon.ico" sizes="any">
+    <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="assets/css/styles.css">
     <style>[x-cloak] { display: none !important; }</style>
 </head>
 
@@ -17,8 +19,8 @@
     <div class="container">
         <div class="services-container"
              @touchstart="handleContainerTouchStart"
-             @touchend="handleContainerTouchEnd"
-             @touchmove="handleContainerTouchMove"
+              @touchend="handleContainerTouchEnd"
+              @touchmove="handleContainerTouchEnd"
              @click="handleContainerClick"
              @contextmenu="handleContainerContextMenu">
             <template x-if="error">
@@ -45,14 +47,16 @@
                     <div class="grid">
                         <template x-for="service in category.services">
                              <a :key="service.name"
-                                :href="isValidURI(service.uri) ? service.uri : '#'"
-                                class="service-link"
-                                :data-text-position="textPosition"
-                                :class="'demo-effect-' + hoverEffect"
-                                :aria-label="'打开 ' + service.name"
-                                :data-uri="service.uri">
+                                 :href="isValidURI(service.uri) ? service.uri : '#'"
+                                 :target="openInNewTab ? '_blank' : '_self'"
+                                 rel="noopener noreferrer"
+                                 class="service-link"
+                                 :data-text-position="textPosition"
+                                 :class="'demo-effect-' + hoverEffect"
+                                 :aria-label="'打开 ' + service.name"
+                                 :data-uri="service.uri">
                                  <img class="service-icon"
-                                      :src="getServiceIcon(service.uri) || service.icon || '/favicon.svg'"
+                                      :src="getServiceIcon(service.uri) || service.icon || '/assets/images/favicon.svg'"
                                      :alt="service.name"
                                      loading="lazy"
                                      @error="imgError">
@@ -117,7 +121,7 @@
                 <div class="icon-picker-grid" x-show="customIconModal.iconOptions?.length">
                     <template x-for="(item, i) in customIconModal.iconOptions" :key="i">
                         <div class="icon-picker-item" :class="{ selected: customIconModal.url === item.url }" @click="customIconModal.url = item.url" :title="item.label">
-                            <img :src="item.url" class="icon-picker-img" @error="event.target.src = '/favicon.svg'">
+                            <img :src="item.url" class="icon-picker-img" @error="event.target.src = '/assets/images/favicon.svg'">
                             <span class="icon-picker-domain" x-text="item.label"></span>
                         </div>
                     </template>
@@ -170,33 +174,34 @@
         </div>
     </div>
 
-    <!-- Settings Sidebar -->
-    <div class="settings-sidebar" x-show="settingsOpen"
-         x-transition:enter="sidebar-enter"
-         x-transition:enter-start="sidebar-enter-start"
-         x-transition:enter-end="sidebar-enter-end"
-         x-transition:leave="sidebar-leave"
-         x-transition:leave-start="sidebar-leave-start"
-         x-transition:leave-end="sidebar-leave-end"
-         @keydown.escape.window="settingsOpen = false"
-         role="dialog" aria-modal="true" aria-label="设置面板">
-        <div class="sidebar-header">
-            <h3>设置</h3>
-            <button class="sidebar-close" @click="settingsOpen = false">✕</button>
-        </div>
-        <div class="sidebar-body">
-            <h4 class="sidebar-section-title">数据</h4>
-            <div class="sidebar-section">
-                <div class="setting-item setting-row">
-                    <label class="setting-label">数据来源</label>
-                    <div class="effect-pills" style="max-width:150px">
-                        <button class="effect-pill" :class="{ selected: dataSource === 'local' }" @click="dataSource = 'local'">本地</button>
-                        <button class="effect-pill" :class="{ selected: dataSource === 'linkding' }" @click="dataSource = 'linkding'">Linkding</button>
-                    </div>
-                </div>
-                <template x-if="dataSource === 'linkding'">
-                    <div>
-                        <form action="https://linkding.example.com" @submit.prevent>
+    <!-- Settings Overlay -->
+    <div class="settings-overlay" x-show="settingsOpen"
+         @click="settingsOpen = false"
+         @keydown.escape.window="settingsOpen = false">
+        <!-- Settings Sidebar -->
+        <div class="settings-sidebar"
+             x-show="settingsOpen"
+             x-transition:enter="sidebar-enter"
+             x-transition:enter-start="sidebar-enter-start"
+             x-transition:enter-end="sidebar-enter-end"
+             x-transition:leave="sidebar-leave"
+             x-transition:leave-start="sidebar-leave-start"
+             x-transition:leave-end="sidebar-leave-end"
+             @click.stop
+             role="dialog" aria-modal="true" aria-label="设置面板">
+            <div class="sidebar-header">
+                <h3>设置</h3>
+                <button class="sidebar-close" @click="settingsOpen = false">✕</button>
+            </div>
+            <div class="sidebar-body">
+            <h4 class="sidebar-section-title">数据来源</h4>
+            <div class="effect-pills" style="margin-bottom:16px">
+                <button class="effect-pill" :class="{ selected: dataSource === 'local' }" @click="dataSource = 'local'">本地</button>
+                <button class="effect-pill" :class="{ selected: dataSource === 'linkding' }" @click="dataSource = 'linkding'">Linkding</button>
+            </div>
+            <template x-if="dataSource === 'linkding'">
+                <div class="sidebar-section">
+                        <form @submit.prevent>
                             <div class="setting-item">
                                 <label class="setting-label">API 地址</label>
                                 <input type="text" class="select-input" x-model="linkdingUrl" id="linkding-url" name="username" autocomplete="username" placeholder="https://linkding.example.com">
@@ -249,7 +254,6 @@
                         </div>
                     </div>
                 </template>
-            </div>
 
             <h4 class="sidebar-section-title">悬浮效果</h4>
             <div class="effect-pills">
@@ -288,19 +292,59 @@
 
             <h4 class="sidebar-section-title">文字</h4>
             <div class="sidebar-section">
-                <div class="toggle-container">
-                    <label class="toggle-label">显示图标名称</label>
-                    <label class="switch">
-                        <input type="checkbox" x-model="showNames">
-                        <span class="slider"></span>
-                    </label>
+                <div class="setting-item setting-row">
+                    <label class="setting-label">文字显示</label>
+                    <div class="custom-select" x-data="{ open: false }" @click.outside="open = false">
+                        <button type="button" class="cs-trigger" :aria-expanded="open" @click="open = !open" @keydown.escape="open = false"
+                            :style="{ color: showNames ? '#5856d6' : '#8e8e93' }">
+                            <span x-text="showNames ? '显示' : '隐藏'"></span>
+                            <svg class="cs-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="cs-dropdown" x-show="open" x-cloak>
+                            <button type="button" class="cs-option" :class="{ selected: showNames }" @click="showNames = true; open = false" style="color:#5856d6">
+                                <span>显示</span>
+                            </button>
+                            <button type="button" class="cs-option" :class="{ selected: !showNames }" @click="showNames = false; open = false" style="color:#8e8e93">
+                                <span>隐藏</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="setting-item setting-row">
                     <label class="setting-label">文字位置</label>
-                    <select class="select-input" x-model="textPosition">
-                        <option value="row">右侧</option>
-                        <option value="column">下方</option>
-                    </select>
+                    <div class="custom-select" x-data="{ open: false }" @click.outside="open = false">
+                        <button type="button" class="cs-trigger" :aria-expanded="open" @click="open = !open" @keydown.escape="open = false"
+                            :style="{ color: textPosition === 'row' ? '#5856d6' : '#30d158' }">
+                            <span x-text="textPosition === 'row' ? '右侧' : '下方'"></span>
+                            <svg class="cs-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="cs-dropdown" x-show="open" x-cloak>
+                            <button type="button" class="cs-option" :class="{ selected: textPosition === 'row' }" @click="textPosition = 'row'; open = false" style="color:#5856d6">
+                                <span>右侧</span>
+                            </button>
+                            <button type="button" class="cs-option" :class="{ selected: textPosition === 'column' }" @click="textPosition = 'column'; open = false" style="color:#30d158">
+                                <span>下方</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="setting-item setting-row">
+                    <label class="setting-label">打开方式</label>
+                    <div class="custom-select" x-data="{ open: false }" @click.outside="open = false">
+                        <button type="button" class="cs-trigger" :aria-expanded="open" @click="open = !open" @keydown.escape="open = false"
+                            :style="{ color: openInNewTab ? '#007aff' : '#ff9f0a' }">
+                            <span x-text="openInNewTab ? '新标签页' : '当前标签页'"></span>
+                            <svg class="cs-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="cs-dropdown" x-show="open" x-cloak>
+                            <button type="button" class="cs-option" :class="{ selected: openInNewTab }" @click="openInNewTab = true; open = false" style="color:#007aff">
+                                <span>新标签页</span>
+                            </button>
+                            <button type="button" class="cs-option" :class="{ selected: !openInNewTab }" @click="openInNewTab = false; open = false" style="color:#ff9f0a">
+                                <span>当前标签页</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="slider-container">
                     <label>图标文字大小</label>
@@ -343,23 +387,26 @@
             <h4 class="sidebar-section-title">背景</h4>
             <div class="sidebar-section">
                 <div class="setting-item">
-                    <label class="setting-label">背景图片</label>
-                    <input type="file" accept="image/*" class="file-input" @change="handleBgUpload">
+                    <input type="file" accept="image/*" class="file-input" @change="handleBgUpload" x-ref="bgFileInput">
                 </div>
-                <button class="btn btn-danger w-full" @click="resetBg">重置背景</button>
+                <div class="bg-preview-wrap" x-show="bgDataUrl">
+                    <img :src="bgDataUrl" class="bg-preview-img">
+                    <button class="bg-preview-x" @click="resetBg">✕</button>
+                </div>
             </div>
 
             <button class="section-reset" @click="resetAll">重置所有设置</button>
         </div>
     </div>
+</div>
 
-    <script defer src="icon-fetcher.js"></script>
-    <script defer src="linkding-fetcher.js"></script>
-    <script defer src="db.js"></script>
-    <script defer src="persist.js"></script>
-    <script defer src="app.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3/dist/cdn.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+    <script defer src="assets/js/icon-fetcher.js"></script>
+    <script defer src="assets/js/linkding-fetcher.js"></script>
+    <script defer src="assets/js/db.js"></script>
+    <script defer src="assets/js/persist.js"></script>
+    <script defer src="assets/js/app.js"></script>
+    <script defer src="assets/vendor/alpinejs-focus.3.15.12.min.js"></script>
+    <script defer src="assets/vendor/alpinejs.3.15.12.min.js"></script>
 </body>
 
 </html>

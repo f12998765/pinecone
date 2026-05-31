@@ -25,6 +25,9 @@ document.addEventListener('alpine:init', () => {
         gridColumns: Alpine.$persist(8).as('pinecone-gridColumns'),
         hoverEffect: Alpine.$persist(2).as('pinecone-hoverEffect'),
         settingsTextSize: Alpine.$persist(14).as('pinecone-settingsTextSize'),
+        openInNewTab: Alpine.$persist(true).as('pinecone-openInNewTab'),
+
+
         bgDataUrl: null,
 
         // Linkding
@@ -37,7 +40,7 @@ document.addEventListener('alpine:init', () => {
         linkdingLoading: false,
         linkdingError: '',
         linkdingTags: [],
-        linkdingSelectedTags: [],
+        linkdingSelectedTags: Alpine.$persist([]).as('pinecone-selectedTags'),
         linkdingTagsLoading: false,
         tagModalOpen: false,
 
@@ -56,10 +59,10 @@ document.addEventListener('alpine:init', () => {
         iconMap: {},
 
         // Linkding filter & custom icons (manually persisted to IndexedDB)
-        linkdingFilterUrls: [],
-        linkdingCustomIcons: {},
-        linkdingIconSources: [],
-        iconSourcesText: '[]',
+        linkdingFilterUrls: Alpine.$persist([]).as('pinecone-filterUrls'),
+        linkdingCustomIcons: Alpine.$persist({}).as('pinecone-customIcons'),
+        linkdingIconSources: Alpine.$persist([]).as('pinecone-iconSources'),
+        iconSourcesText: '',
         contextMenu: { show: false, x: 0, y: 0, service: null },
         filterUrlsText: '[]',
         customIconsText: '{}',
@@ -68,7 +71,6 @@ document.addEventListener('alpine:init', () => {
         _suppressNextClick: false,
         _refreshTotal: 0,
         _refreshDone: 0,
-        _loadingLinkding: false,
 
         get activeServices() {
             if (this.dataSource === 'linkding' && this.linkdingFilterUrls?.length) {
@@ -104,44 +106,15 @@ document.addEventListener('alpine:init', () => {
                 this.iconMap = IconFetcher.getAllCached();
             });
 
-            // 先从 IndexedDB 加载全部持久化数据，确保首次渲染就正确
-            this._loadingLinkding = true;
-            const [savedDataSource, savedLinkdingData, savedSelectedTags, savedBgDataUrl,
-                    savedFilterUrls, savedCustomIcons, savedIconSources] = await Promise.all([
-                PineconeDB.get('pinecone-dataSource').catch(() => null),
+            const [savedLinkdingData, savedBgDataUrl] = await Promise.all([
                 PineconeDB.get('linkdingData').catch(() => null),
-                PineconeDB.get('linkdingSelectedTags').catch(() => null),
-                PineconeDB.get('bgDataUrl').catch(() => null),
-                PineconeDB.get('pinecone-linkdingFilterUrls').catch(() => null),
-                PineconeDB.get('pinecone-linkdingCustomIcons').catch(() => null),
-                PineconeDB.get('pinecone-linkdingIconSources').catch(() => null)
+                PineconeDB.get('bgDataUrl').catch(() => null)
             ]);
-
-            if (savedDataSource && (savedDataSource === 'local' || savedDataSource === 'linkding')) {
-                this.dataSource = savedDataSource;
-            }
-            if (savedLinkdingData) {
-                this.linkdingData = savedLinkdingData;
-            }
-            if (savedSelectedTags && savedSelectedTags.length > 0) {
-                this.linkdingSelectedTags = savedSelectedTags;
-            }
-            if (savedBgDataUrl) {
-                this.bgDataUrl = savedBgDataUrl;
-            }
-            if (savedFilterUrls) {
-                this.linkdingFilterUrls = savedFilterUrls;
-            }
-            if (savedCustomIcons) {
-                this.linkdingCustomIcons = savedCustomIcons;
-            }
-            if (savedIconSources) {
-                this.linkdingIconSources = savedIconSources;
-            }
+            if (savedLinkdingData) this.linkdingData = savedLinkdingData;
+            if (savedBgDataUrl) this.bgDataUrl = savedBgDataUrl;
             this.filterUrlsText = JSON.stringify(this.linkdingFilterUrls || [], null, 2);
             this.customIconsText = JSON.stringify(this.linkdingCustomIcons || {}, null, 2);
             this.iconSourcesText = (this.linkdingIconSources || []).join('\n');
-            this._loadingLinkding = false;
 
             await this.loadServices();
             this._buildServiceMap();
@@ -173,12 +146,12 @@ document.addEventListener('alpine:init', () => {
         async loadServices(fromUserAction) {
             this.error = false;
             if (this.dataSource === 'linkding') {
-                if (this.linkdingData && this.linkdingData.length > 0) {
+                if (this.linkdingData?.length > 0) {
                     this.services = this._filterInvalid(this.linkdingData);
                     this.linkdingError = '';
                 } else {
                     this.services = [];
-                    if (fromUserAction && !this._loadingLinkding) {
+                    if (fromUserAction) {
                         this.linkdingError = '尚未同步 Linkding 数据';
                     }
                 }
@@ -186,7 +159,7 @@ document.addEventListener('alpine:init', () => {
             }
             this.services = [];
             try {
-                const r = await fetch('services.json');
+                const r = await fetch('local/services.json');
                 if (!r.ok) throw Error();
                 const d = await r.json();
                 if (this.dataSource !== 'local') return;
@@ -222,6 +195,7 @@ document.addEventListener('alpine:init', () => {
 
         toggleDataSource() {
             this.dataSource = this.dataSource === 'local' ? 'linkding' : 'local';
+            this.hideContextMenu();
         },
 
         refreshIcons() {
@@ -249,7 +223,6 @@ document.addEventListener('alpine:init', () => {
             this.linkdingSelectedTags = [];
             this.services = [];
             PineconeDB.remove('linkdingData').catch(() => {});
-            PineconeDB.remove('linkdingSelectedTags').catch(() => {});
             IconFetcher.refreshCache();
             this.iconMap = {};
             this.linkdingError = 'Linkding 数据与图标缓存已清除';
@@ -272,7 +245,6 @@ document.addEventListener('alpine:init', () => {
             this.linkdingSelectedTags = this.linkdingSelectedTags.includes(name)
                 ? this.linkdingSelectedTags.filter(t => t !== name)
                 : [...this.linkdingSelectedTags, name];
-            PineconeDB.set('linkdingSelectedTags', [...this.linkdingSelectedTags]).catch(() => {});
         },
 
         async fetchLinkdingTags() {
@@ -291,14 +263,14 @@ document.addEventListener('alpine:init', () => {
                 this.linkdingTags = tags.sort((a, b) => b.count - a.count);
                 const validNames = new Set(tags.map(t => t.name));
                 this.linkdingSelectedTags = this.linkdingSelectedTags.filter(t => validNames.has(t));
-                PineconeDB.set('linkdingSelectedTags', [...this.linkdingSelectedTags]).catch(() => {});
+    
             } catch (err) {
                 this.linkdingError = '获取标签失败: ' + err.message;
             }
             this.linkdingTagsLoading = false;
         },
 
-        syncLinkding() {
+        async syncLinkding() {
             const urlErr = LinkdingFetcher.validateUrl(this.linkdingUrl);
             if (urlErr) { this.linkdingError = urlErr; return; }
             const tokenErr = LinkdingFetcher.validateToken(this.linkdingToken);
@@ -307,30 +279,28 @@ document.addEventListener('alpine:init', () => {
             this.linkdingLoading = true;
             this.linkdingError = '';
 
-            LinkdingFetcher.fetchBookmarks(this.linkdingUrl, this.linkdingToken, this.linkdingSelectedTags, this.linkdingProxyEnabled ? this.linkdingProxy : '')
-                .then(data => {
-                    const orderMap = new Map(this.linkdingSelectedTags.map((n, i) => [n, i]));
-                    data.sort((a, b) => (orderMap.get(a.category) ?? 999) - (orderMap.get(b.category) ?? 999));
-                    this.linkdingData = data;
-                    this.services = this._filterInvalid(data);
-                    PineconeDB.set('linkdingData', data).catch(() => {});
-                    this.linkdingLoading = false;
-                    const count = data.reduce((s, c) => s + c.services.length, 0);
-                    this.linkdingError = `同步成功，共 ${count} 个书签`;
+            try {
+                const data = await LinkdingFetcher.fetchBookmarks(this.linkdingUrl, this.linkdingToken, this.linkdingSelectedTags, this.linkdingProxyEnabled ? this.linkdingProxy : '');
+                const orderMap = new Map(this.linkdingSelectedTags.map((n, i) => [n, i]));
+                data.sort((a, b) => (orderMap.get(a.category) ?? 999) - (orderMap.get(b.category) ?? 999));
+                this.linkdingData = data;
+                this.services = this._filterInvalid(data);
+                PineconeDB.set('linkdingData', data).catch(() => {});
+                const count = data.reduce((s, c) => s + c.services.length, 0);
+                this.linkdingError = `同步成功，共 ${count} 个书签`;
 
-                    const domains = new Set();
-                    data.forEach(cat => cat.services.forEach(s => {
-                        const d = IconFetcher.extractDomain(s.uri);
-                        if (d) domains.add(d);
-                    }));
-                    if (domains.size > 0) {
-                        IconFetcher.resolveDomains([...domains]);
-                    }
-                })
-                .catch(err => {
-                    this.linkdingError = err.message;
-                    this.linkdingLoading = false;
-                });
+                const domains = new Set();
+                data.forEach(cat => cat.services.forEach(s => {
+                    const d = IconFetcher.extractDomain(s.uri);
+                    if (d) domains.add(d);
+                }));
+                if (domains.size > 0) {
+                    IconFetcher.resolveDomains([...domains]);
+                }
+            } catch (err) {
+                this.linkdingError = err.message;
+            }
+            this.linkdingLoading = false;
         },
 
         getServiceIcon(uri) {
@@ -341,36 +311,38 @@ document.addEventListener('alpine:init', () => {
             return domain ? (this.iconMap[domain] || null) : null;
         },
 
+        _clampMenuPosition(x, y, menuW = 180, menuH = 80) {
+            if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 8;
+            if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 8;
+            if (x < 0) x = 8;
+            if (y < 0) y = 8;
+            return { x, y };
+        },
+
+        _showContextMenu(clientX, clientY, uri) {
+            const service = this._serviceByUri(uri);
+            if (!service) return false;
+            const { x, y } = this._clampMenuPosition(clientX, clientY);
+            this.contextMenu = { show: true, x, y, service };
+            return true;
+        },
+
         handleContainerTouchStart(event) {
             if (this.dataSource !== 'linkding') return;
             const link = event.target.closest('.service-link');
             if (!link) return;
             const touch = event.touches[0];
             if (!touch) return;
-            const cx = touch.clientX, cy = touch.clientY;
             const uri = link.dataset.uri;
             clearTimeout(this._lpTimer);
             this._lpTimer = setTimeout(() => {
                 this._lpTimer = null;
-                const service = this._serviceByUri(uri);
-                if (!service) return;
-                const menuW = 180, menuH = 80;
-                let x = cx, y = cy;
-                if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 8;
-                if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 8;
-                if (x < 0) x = 8;
-                if (y < 0) y = 8;
-                this.contextMenu = { show: true, x, y, service };
-                this._suppressNextClick = true;
+                if (this._showContextMenu(touch.clientX, touch.clientY, uri))
+                    this._suppressNextClick = true;
             }, 500);
         },
 
         handleContainerTouchEnd() {
-            clearTimeout(this._lpTimer);
-            this._lpTimer = null;
-        },
-
-        handleContainerTouchMove() {
             clearTimeout(this._lpTimer);
             this._lpTimer = null;
         },
@@ -387,15 +359,7 @@ document.addEventListener('alpine:init', () => {
             const link = event.target.closest('.service-link');
             if (!link) return;
             event.preventDefault();
-            const service = this._serviceByUri(link.dataset.uri);
-            if (!service) return;
-            const menuW = 180, menuH = 80;
-            let x = event.clientX, y = event.clientY;
-            if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 8;
-            if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 8;
-            if (x < 0) x = 8;
-            if (y < 0) y = 8;
-            this.contextMenu = { show: true, x, y, service };
+            this._showContextMenu(event.clientX, event.clientY, link.dataset.uri);
         },
 
         hideContextMenu() {
@@ -406,10 +370,7 @@ document.addEventListener('alpine:init', () => {
         filterUrlFromMenu() {
             const uri = this.contextMenu.service.uri;
             if (uri && !this.linkdingFilterUrls.includes(uri)) {
-                const newUrls = [...this.linkdingFilterUrls, uri];
-                this.linkdingFilterUrls = newUrls;
-                this.filterUrlsText = JSON.stringify(newUrls, null, 2);
-                PineconeDB.set('pinecone-linkdingFilterUrls', newUrls).catch(() => {});
+                this.linkdingFilterUrls = [...this.linkdingFilterUrls, uri];
             }
             this.hideContextMenu();
         },
@@ -440,10 +401,7 @@ document.addEventListener('alpine:init', () => {
         saveCustomIcon() {
             const { uri, url } = this.customIconModal;
             if (!uri || !url?.trim()) return;
-            const newIcons = { ...this.linkdingCustomIcons, [uri]: url.trim() };
-            this.linkdingCustomIcons = newIcons;
-            this.customIconsText = JSON.stringify(newIcons, null, 2);
-            PineconeDB.set('pinecone-linkdingCustomIcons', newIcons).catch(() => {});
+            this.linkdingCustomIcons = { ...this.linkdingCustomIcons, [uri]: url.trim() };
             this.customIconModal.show = false;
             const fileInput = document.querySelector('.modal-card input[type="file"]');
             if (fileInput) fileInput.value = '';
@@ -472,7 +430,6 @@ document.addEventListener('alpine:init', () => {
                 const parsed = JSON.parse(this.filterUrlsText);
                 if (!Array.isArray(parsed)) throw new Error();
                 this.linkdingFilterUrls = parsed;
-                PineconeDB.set('pinecone-linkdingFilterUrls', parsed).catch(() => {});
                 this.linkdingError = '已屏蔽地址已更新';
             } catch {
                 alert('格式错误：请输入有效的 JSON 数组，例如 ["https://example.com/page"]');
@@ -484,7 +441,6 @@ document.addEventListener('alpine:init', () => {
                 const parsed = JSON.parse(this.customIconsText);
                 if (typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error();
                 this.linkdingCustomIcons = parsed;
-                PineconeDB.set('pinecone-linkdingCustomIcons', parsed).catch(() => {});
                 this.linkdingError = '自定义图标已更新';
             } catch {
                 alert('格式错误：请输入有效的 JSON 对象，例如 {"https://example.com/page": "https://..."}');
@@ -494,7 +450,6 @@ document.addEventListener('alpine:init', () => {
         applyIconSources() {
             const lines = this.iconSourcesText.split('\n').map(s => s.trim()).filter(Boolean);
             this.linkdingIconSources = lines;
-            PineconeDB.set('pinecone-linkdingIconSources', lines).catch(() => {});
             this.linkdingError = '自定义图标源已更新';
         },
 
@@ -509,7 +464,6 @@ document.addEventListener('alpine:init', () => {
             r.style.setProperty('--text-color', this.textColor);
             r.style.setProperty('--max-width', (mb ? Math.min(this.maxWidth, window.innerWidth - 32) : this.maxWidth) + 'px');
             r.style.setProperty('--text-icon-gap', (mb ? Math.min(this.textIconGap, 10) : this.textIconGap) + 'px');
-            r.style.setProperty('--text-position', this.textPosition);
             r.style.setProperty('--grid-columns', mb ? Math.min(this.gridColumns, 5) : this.gridColumns);
             r.style.setProperty('--settings-text-size', this.settingsTextSize + 'px');
         },
@@ -544,6 +498,7 @@ document.addEventListener('alpine:init', () => {
         resetBg() {
             this.bgDataUrl = null;
             PineconeDB.remove('bgDataUrl').catch(() => {});
+            if (this.$refs.bgFileInput) this.$refs.bgFileInput.value = '';
         },
 
         resetAll() {
@@ -560,6 +515,7 @@ document.addEventListener('alpine:init', () => {
             this.gridColumns = 8;
             this.hoverEffect = 2;
             this.settingsTextSize = 14;
+            this.openInNewTab = true;
             this.bgDataUrl = null;
             
             // Reset Linkding settings
@@ -581,15 +537,6 @@ document.addEventListener('alpine:init', () => {
             
             PineconeDB.remove('bgDataUrl').catch(() => {});
             PineconeDB.remove('linkdingData').catch(() => {});
-            PineconeDB.remove('pinecone-linkdingFilterUrls').catch(() => {});
-            PineconeDB.remove('pinecone-linkdingCustomIcons').catch(() => {});
-            PineconeDB.remove('pinecone-linkdingIconSources').catch(() => {});
-            PineconeDB.remove('linkdingSelectedTags').catch(() => {});
-            PineconeDB.remove('pinecone-linkdingSelectedTags').catch(() => {});
-            PineconeDB.remove('pinecone-linkdingUrl').catch(() => {});
-            PineconeDB.remove('pinecone-linkdingToken').catch(() => {});
-            PineconeDB.remove('pinecone-linkdingProxy').catch(() => {});
-            PineconeDB.remove('pinecone-linkdingProxyEnabled').catch(() => {});
             
             this.applyCssVars();
         },
@@ -598,7 +545,7 @@ document.addEventListener('alpine:init', () => {
             const img = e.target;
             if (!img.dataset.fallback) {
                 img.dataset.fallback = '1';
-                img.src = '/favicon.svg';
+                img.src = '/assets/images/favicon.svg';
             }
         },
 
@@ -613,7 +560,7 @@ document.addEventListener('alpine:init', () => {
 
 // Service Worker registration
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js').then(registration => {
+    navigator.serviceWorker.register('/assets/js/service-worker.js').then(registration => {
         console.log('ServiceWorker 注册成功，作用域:', registration.scope);
 
         registration.onupdatefound = () => {

@@ -5,42 +5,42 @@
 			{
 				"name": "青空",
 				"uri": "https://main.elk.zone/",
-				"icon": "/icons/sky.jpg"
+				"icon": "/local/icons/sky.jpg"
 			},
 			{
 				"name": "Link",
 				"uri": "https://link.xizero.com/",
-				"icon": "/icons/linkding.webp"
+				"icon": "/local/icons/linkding.webp"
 			},
 			{
 				"name": "Twitter",
 				"uri": "https://x.com/home",
-				"icon": "/icons/twitter.png"
+				"icon": "/local/icons/twitter.png"
 			},
 			{
 				"name": "Inoreader",
 				"uri": "https://www.inoreader.com/all_articles",
-				"icon": "/icons/inoreader.png"
+				"icon": "/local/icons/inoreader.png"
 			},
 			{
 				"name": "Hacker News",
 				"uri": "https://news.ycombinator.com/",
-				"icon": "/icons/hackernews.png"
+				"icon": "/local/icons/hackernews.png"
 			},
 			{
 				"name": "其乐",
 				"uri": "https://keylol.com/",
-				"icon": "/icons/keylol.png"
+				"icon": "/local/icons/keylol.png"
 			},
 			{
 				"name": "Switch520",
 				"uri": "https://www.gamer520.com/",
-				"icon": "/icons/ns.png"
+				"icon": "/local/icons/ns.png"
 			},
 			{
 				"name": "Reddit",
 				"uri": "https://www.reddit.com/",
-				"icon": "/icons/reddit.png"
+				"icon": "/local/icons/reddit.png"
 			}
 		]
 	},
@@ -50,42 +50,42 @@
 			{
 				"name": "哔哩哔哩",
 				"uri": "https://www.bilibili.com/",
-				"icon": "/icons/bilibili.png"
+				"icon": "/local/icons/bilibili.png"
 			},
 			{
 				"name": "抖音",
 				"uri": "https://www.douyin.com/",
-				"icon": "/icons/douyin.png"
+				"icon": "/local/icons/douyin.png"
 			},
 			{
 				"name": "小红书",
 				"uri": "https://www.xiaohongshu.com/",
-				"icon": "/icons/redbook.png"
+				"icon": "/local/icons/redbook.png"
 			},
 			{
 				"name": "NGA",
 				"uri": "https://nga.178.com/",
-				"icon": "/icons/nga.png"
+				"icon": "/local/icons/nga.png"
 			},
 			{
 				"name": "YouTube",
 				"uri": "https://www.youtube.com/",
-				"icon": "/icons/youtube.png"
+				"icon": "/local/icons/youtube.png"
 			},
 			{
 				"name": "Instagram",
 				"uri": "https://www.instagram.com/",
-				"icon": "/icons/instagram.png"
+				"icon": "/local/icons/instagram.png"
 			},
 			{
 				"name": "Twitch",
 				"uri": "https://www.twitch.tv/",
-				"icon": "/icons/twitch.png"
+				"icon": "/local/icons/twitch.png"
 			},
 			{
 				"name": "Discord",
 				"uri": "https://discord.com/channels/@me",
-				"icon": "/icons/discord.png"
+				"icon": "/local/icons/discord.png"
 			}
 		]
 	},
@@ -95,42 +95,42 @@
 			{
 				"name": "DeepSeek",
 				"uri": "https://chat.deepseek.com/",
-				"icon": "/icons/deepseek.png"
+				"icon": "/local/icons/deepseek.png"
 			},
 			{
 				"name": "DuckDuckGo AI",
 				"uri": "https://duck.ai/",
-				"icon": "/icons/duckduckgo.png"
+				"icon": "/local/icons/duckduckgo.png"
 			},
 			{
 				"name": "Microsoft Copilot",
 				"uri": "https://copilot.microsoft.com/",
-				"icon": "/icons/copilot-color.svg"
+				"icon": "/local/icons/copilot-color.svg"
 			},
 			{
 				"name": "Gemini",
 				"uri": "https://gemini.google.com/app",
-				"icon": "/icons/gemini.png"
+				"icon": "/local/icons/gemini.png"
 			},
 			{
 				"name": "Qwen",
 				"uri": "https://chat.qwen.ai/",
-				"icon": "/icons/qwen.png"
+				"icon": "/local/icons/qwen.png"
 			},
 			{
 				"name": "OutLook",
 				"uri": "https://outlook.live.com/mail/0/inbox/",
-				"icon": "/icons/outlook.png"
+				"icon": "/local/icons/outlook.png"
 			},
 			{
 				"name": "OneDrive",
 				"uri": "https://onedrive.live.com/",
-				"icon": "/icons/onedrive.png"
+				"icon": "/local/icons/onedrive.png"
 			},
 			{
 				"name": "临时邮箱",
 				"uri": "https://www.emailtick.com/zh",
-				"icon": "/icons/tempemail.png"
+				"icon": "/local/icons/tempemail.png"
 			}
 		]
 	},
@@ -140,42 +140,42 @@
 			{
 				"name": "Todo.txt",
 				"uri": "https://xizero.com/todo.txt/",
-				"icon": "/icons/todo.jpg"
+				"icon": "/local/icons/todo.jpg"
 			},
 			{
 				"name": "FFXIV Wiki",
 				"uri": "https://ff14.huijiwiki.com/wiki/%E9%A6%96%E9%A1%B5",
-				"icon": "/icons/ffxiv_wiki.webp"
+				"icon": "/local/icons/ffxiv_wiki.webp"
 			},
 			{
 				"name": "艾欧泽亚售楼中心",
 				"uri": "https://house.ffxiv.cyou/",
-				"icon": "/icons/ffxiv_house.png"
+				"icon": "/local/icons/ffxiv_house.png"
 			},
 			{
 				"name": "Soulframe Wiki",
 				"uri": "https://wiki.avakot.org/",
-				"icon": "/icons/soulframe_wiki.png"
+				"icon": "/local/icons/soulframe_wiki.png"
 			},
 			{
 				"name": "Warframe 中文维基",
 				"uri": "https://warframe.huijiwiki.com/wiki/Mainpage",
-				"icon": "/icons/warframe_huiji_wiki.webp"
+				"icon": "/local/icons/warframe_huiji_wiki.webp"
 			},
 			{
 				"name": "Warframe Wiki",
 				"uri": "https://wiki.warframe.com/",
-				"icon": "/icons/warframe_wiki.webp"
+				"icon": "/local/icons/warframe_wiki.webp"
 			},
 			{
 				"name": "Warframe Market",
 				"uri": "https://warframe.market/zh-hans/",
-				"icon": "/icons/wm.webp"
+				"icon": "/local/icons/wm.webp"
 			},
 			{
 				"name": "Warframe 掉宝",
 				"uri": "https://warframestreams.lol/",
-				"icon": "/icons/warframestreams.png"
+				"icon": "/local/icons/warframestreams.png"
 			}
 		]
 	},
@@ -185,27 +185,27 @@
 			{
 				"name": "v2ex",
 				"uri": "https://www.v2ex.com/",
-				"icon": "/icons/v2ex.png"
+				"icon": "/local/icons/v2ex.png"
 			},
 			{
 				"name": "Linux do",
 				"uri": "https://linux.do/",
-				"icon": "/icons/linuxdo.webp"
+				"icon": "/local/icons/linuxdo.webp"
 			},
 			{
 				"name": "NodeSeek",
 				"uri": "https://www.nodeseek.com/",
-				"icon": "/icons/nodeseek.png"
+				"icon": "/local/icons/nodeseek.png"
 			},
 			{
 				"name": "Github",
 				"uri": "https://www.github.com/",
-				"icon": "/icons/github.png"
+				"icon": "/local/icons/github.png"
 			},
 			{
 				"name": "Bangumi",
 				"uri": "https://bgm.tv/",
-				"icon": "/icons/bgmtv.png"
+				"icon": "/local/icons/bgmtv.png"
 			}
 		]
 	}

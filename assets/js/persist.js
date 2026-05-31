@@ -20,8 +20,10 @@ document.addEventListener("alpine:init", () => {
         const lookup = alias || path;
         const saved = storage.get(lookup);
         if (saved != null) setter(saved);
-        Alpine.effect(() => { const v = getter(); if (v !== undefined) storage.set(lookup, v); });
-        return initialValue;
+        queueMicrotask(() => {
+            Alpine.effect(() => { const v = getter(); if (v !== undefined) storage.set(lookup, v); });
+        });
+        return getter();
       },
       func => { func.as = key => { alias = key; return func; }; }
     );

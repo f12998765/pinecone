@@ -145,7 +145,7 @@ document.addEventListener('alpine:init', () => {
             });
 
             const cssVarKeys = ['iconSize','iconRadius','iconOpacity','iconGap','textSize',
-                'textColor','maxWidth','textIconGap','textPosition','gridColumns','settingsTextSize'];
+                'textColor','maxWidth','textIconGap','gridColumns','settingsTextSize'];
             cssVarKeys.forEach(k => this.$watch(k, () => this.applyCssVars()));
             this.$watch('bgDataUrl', () => this.applyBg());
             this.$watch('dataSource', (val, oldVal) => {
@@ -212,6 +212,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         refreshIcons() {
+            this.linkdingError = '';
             IconFetcher.refreshCache();
             this.iconMap = {};
             const domains = new Set();

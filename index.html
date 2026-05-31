@@ -224,18 +224,21 @@
                             </div>
                         </template>
                         <div class="ld-row">
-                            <button class="ld-btn ld-btn-outline ld-btn-tag" @click="handleTagButton" :disabled="linkdingTagsLoading || !linkdingUrl || !linkdingToken">
+                            <button class="ld-btn ld-btn-tag" @click="handleTagButton" :disabled="linkdingTagsLoading || !linkdingUrl || !linkdingToken">
                                 选择标签
                                 <span class="ld-badge" x-show="linkdingSelectedTags.length && !linkdingTagsLoading" x-text="linkdingSelectedTags.length"></span>
                             </button>
-                            <button class="ld-btn ld-btn-outline ld-btn-sync" @click="syncLinkding" :disabled="linkdingLoading || !linkdingUrl || !linkdingToken">
+                            <button class="ld-btn ld-btn-sync" @click="syncLinkding" :disabled="linkdingLoading || !linkdingUrl || !linkdingToken">
                                 <span x-show="!linkdingLoading">获取书签</span>
                                 <span x-show="linkdingLoading">同步中</span>
                             </button>
-                            <button class="ld-btn ld-btn-outline ld-btn-refresh" @click="refreshIcons" :disabled="!services.length">刷新图标</button>
-                            <button class="ld-btn ld-btn-outline ld-btn-danger" @click="clearLinkdingData" :disabled="!services.length">清除数据</button>
+                            <button class="ld-btn ld-btn-refresh" @click="refreshIcons" :disabled="!services.length">刷新图标</button>
+                            <button class="ld-btn ld-btn-danger" @click="clearLinkdingData" :disabled="!services.length">清除数据</button>
                         </div>
-                        <div x-show="linkdingError" class="linkding-status" x-text="linkdingError" :class="{ 'status-success': linkdingError.includes('成功') }"></div>
+                        <template x-if="iconRefreshStatus">
+                            <div class="linkding-status status-success" x-text="iconRefreshStatus"></div>
+                        </template>
+                        <div x-show="linkdingError && !iconRefreshStatus" class="linkding-status" x-text="linkdingError" :class="{ 'status-success': linkdingError.includes('成功') }"></div>
                         <div class="setting-item" style="margin-top:8px">
                             <label class="setting-label">已屏蔽地址</label>
                             <textarea class="select-input textarea-input" x-model="filterUrlsText" rows="2" placeholder='["https://example.com/page"]'></textarea>

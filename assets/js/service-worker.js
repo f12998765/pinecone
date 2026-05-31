@@ -1,4 +1,4 @@
-﻿const CACHE_VERSION = 'v4.5';
+const CACHE_VERSION = 'v4.5';
 const STATIC_CACHE = `pinecone-static-${CACHE_VERSION}`;
 const DATA_CACHE = `pinecone-data-${CACHE_VERSION}`;
 
@@ -6,6 +6,7 @@ const STATIC_ASSETS = [
   '/', '/index.html', '/manifest.json',
   '/assets/images/favicon.ico', '/assets/images/favicon.svg', '/assets/images/apple-touch-icon.png',
   '/assets/images/favicon-96x96.png', '/assets/images/web-app-manifest-192x192.png', '/assets/images/web-app-manifest-512x512.png',
+  '/assets/css/styles.css',
   '/assets/js/app.js', '/assets/js/icon-fetcher.js', '/assets/js/linkding-fetcher.js', '/assets/js/db.js', '/assets/js/persist.js',
   '/assets/vendor/alpinejs.3.15.12.min.js', '/assets/vendor/alpinejs-focus.3.15.12.min.js',
 ];

@@ -1,4 +1,4 @@
-﻿document.addEventListener("alpine:init", () => {
+document.addEventListener("alpine:init", () => {
   const storage = {
     get(key) {
       try { const v = localStorage.getItem(key); return v != null ? JSON.parse(v) : undefined; }

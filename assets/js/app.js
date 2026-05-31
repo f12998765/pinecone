@@ -29,6 +29,7 @@ document.addEventListener('alpine:init', () => {
 
 
         bgDataUrl: null,
+        _bgBlobUrl: null,
 
         // Linkding
         dataSource: Alpine.$persist('local').as('pinecone-dataSource'),
@@ -71,6 +72,7 @@ document.addEventListener('alpine:init', () => {
         _suppressNextClick: false,
         _refreshTotal: 0,
         _refreshDone: 0,
+        iconRefreshStatus: '',
 
         get activeServices() {
             if (this.dataSource === 'linkding' && this.linkdingFilterUrls?.length) {
@@ -94,11 +96,12 @@ document.addEventListener('alpine:init', () => {
                 this.iconMap[domain] = url;
                 if (this._refreshTotal > 0) {
                     this._refreshDone++;
-                    this.linkdingError = `正在刷新图标 ${this._refreshDone}/${this._refreshTotal}`;
+                    this.iconRefreshStatus = `正在刷新图标 ${this._refreshDone}/${this._refreshTotal}`;
                     if (this._refreshDone >= this._refreshTotal) {
                         this._refreshTotal = 0;
                         this._refreshDone = 0;
-                        this.linkdingError = '图标缓存已清除，重新获取成功';
+                        this.iconRefreshStatus = '图标缓存已清除，重新获取成功';
+                        setTimeout(() => { this.iconRefreshStatus = ''; }, 3000);
                     }
                 }
             });
@@ -106,12 +109,20 @@ document.addEventListener('alpine:init', () => {
                 this.iconMap = IconFetcher.getAllCached();
             });
 
-            const [savedLinkdingData, savedBgDataUrl] = await Promise.all([
+            const [savedLinkdingData, savedBgBlob, legacyBgUrl] = await Promise.all([
                 PineconeDB.get('linkdingData').catch(() => null),
+                PineconeDB.get('bgDataBlob').catch(() => null),
                 PineconeDB.get('bgDataUrl').catch(() => null)
             ]);
             if (savedLinkdingData) this.linkdingData = savedLinkdingData;
-            if (savedBgDataUrl) this.bgDataUrl = savedBgDataUrl;
+            if (savedBgBlob && savedBgBlob.type && savedBgBlob.data) {
+                const blob = new Blob([new Uint8Array(savedBgBlob.data)], { type: savedBgBlob.type });
+                this._bgBlobUrl = URL.createObjectURL(blob);
+                this.bgDataUrl = this._bgBlobUrl;
+            } else if (legacyBgUrl) {
+                this.bgDataUrl = legacyBgUrl;
+                PineconeDB.remove('bgDataUrl').catch(() => {});
+            }
             this.filterUrlsText = JSON.stringify(this.linkdingFilterUrls || [], null, 2);
             this.customIconsText = JSON.stringify(this.linkdingCustomIcons || {}, null, 2);
             this.iconSourcesText = (this.linkdingIconSources || []).join('\n');
@@ -122,10 +133,12 @@ document.addEventListener('alpine:init', () => {
             this.applyBg();
 
             this.$watch('linkdingFilterUrls', () => {
-                this.filterUrlsText = JSON.stringify(this.linkdingFilterUrls || [], null, 2);
+                if (document.activeElement?.tagName !== 'TEXTAREA')
+                    this.filterUrlsText = JSON.stringify(this.linkdingFilterUrls || [], null, 2);
             });
             this.$watch('linkdingCustomIcons', () => {
-                this.customIconsText = JSON.stringify(this.linkdingCustomIcons || {}, null, 2);
+                if (document.activeElement?.tagName !== 'TEXTAREA')
+                    this.customIconsText = JSON.stringify(this.linkdingCustomIcons || {}, null, 2);
             });
             this.$watch('linkdingIconSources', () => {
                 this.iconSourcesText = (this.linkdingIconSources || []).join('\n');
@@ -209,10 +222,10 @@ document.addEventListener('alpine:init', () => {
             this._refreshTotal = domains.size;
             this._refreshDone = 0;
             if (domains.size === 0) {
-                this.linkdingError = '没有需要刷新的图标';
+                this.iconRefreshStatus = '没有需要刷新的图标';
                 return;
             }
-            this.linkdingError = `正在刷新图标 0/${this._refreshTotal}`;
+            this.iconRefreshStatus = `正在刷新图标 0/${this._refreshTotal}`;
             IconFetcher.resolveDomains([...domains]);
         },
 
@@ -469,8 +482,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         applyBg() {
-            if (this.bgDataUrl) {
-                document.body.style.backgroundImage = `url(${this.bgDataUrl})`;
+            const url = this._bgBlobUrl || this.bgDataUrl;
+            if (url) {
+                document.body.style.backgroundImage = `url(${url})`;
                 document.body.classList.add('custom-bg');
             } else {
                 document.body.style.backgroundImage = '';
@@ -481,22 +495,41 @@ document.addEventListener('alpine:init', () => {
         handleBgUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
-            if (file.size > 2 * 1024 * 1024) {
-                if (!confirm(`图片较大 (${(file.size / 1024 / 1024).toFixed(1)}MB)，确定继续？`)) {
+            if (file.size > 5 * 1024 * 1024) {
+                if (!confirm(`图片较大 (${(file.size / 1024 / 1024).toFixed(1)}MB)，可能影响性能，确定继续？`)) {
                     e.target.value = '';
                     return;
                 }
             }
+            // Revoke old blob URL
+            if (this._bgBlobUrl) {
+                URL.revokeObjectURL(this._bgBlobUrl);
+                this._bgBlobUrl = null;
+            }
+            // Create blob URL for immediate display
+            this._bgBlobUrl = URL.createObjectURL(file);
+            this.bgDataUrl = this._bgBlobUrl;
+            
+            // Store as ArrayBuffer in IndexedDB
+            const gen = (this._bgGen = (this._bgGen || 0) + 1);
             const reader = new FileReader();
             reader.onload = (ev) => {
-                this.bgDataUrl = ev.target.result;
-                PineconeDB.set('bgDataUrl', ev.target.result).catch(() => {});
+                if (gen !== this._bgGen) return;
+                PineconeDB.set('bgDataBlob', { 
+                    type: file.type, 
+                    data: Array.from(new Uint8Array(ev.target.result)) 
+                }).catch(() => {});
             };
-            reader.readAsDataURL(file);
+            reader.readAsArrayBuffer(file);
         },
 
         resetBg() {
+            if (this._bgBlobUrl) {
+                URL.revokeObjectURL(this._bgBlobUrl);
+                this._bgBlobUrl = null;
+            }
             this.bgDataUrl = null;
+            PineconeDB.remove('bgDataBlob').catch(() => {});
             PineconeDB.remove('bgDataUrl').catch(() => {});
             if (this.$refs.bgFileInput) this.$refs.bgFileInput.value = '';
         },
@@ -516,9 +549,12 @@ document.addEventListener('alpine:init', () => {
             this.hoverEffect = 2;
             this.settingsTextSize = 14;
             this.openInNewTab = true;
+            if (this._bgBlobUrl) {
+                URL.revokeObjectURL(this._bgBlobUrl);
+                this._bgBlobUrl = null;
+            }
             this.bgDataUrl = null;
-            
-            // Reset Linkding settings
+
             this.dataSource = 'local';
             this.linkdingUrl = '';
             this.linkdingToken = '';
@@ -534,10 +570,10 @@ document.addEventListener('alpine:init', () => {
             this.filterUrlsText = '[]';
             this.customIconsText = '{}';
             this.iconSourcesText = '';
-            
-            PineconeDB.remove('bgDataUrl').catch(() => {});
+
+            PineconeDB.remove('bgDataBlob').catch(() => {});
             PineconeDB.remove('linkdingData').catch(() => {});
-            
+
             this.applyCssVars();
         },
 

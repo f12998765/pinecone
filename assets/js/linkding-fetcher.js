@@ -34,10 +34,11 @@ const LinkdingFetcher = {
     async fetchBookmarks(apiUrl, apiToken, filterTags, proxyUrl) {
         const base = apiUrl.replace(/\/+$/, '');
         const wrap = this._makeWrap(proxyUrl);
-        let url = wrap(`${base}/api/bookmarks/?limit=100`);
+        let url = `${base}/api/bookmarks/?limit=100`;
         if (filterTags?.length) {
             url += `&q=${encodeURIComponent(filterTags.map(t => `#${t}`).join(' or '))}`;
         }
+        url = wrap(url);
         let items = [];
         while (url) {
             const data = await this._req(url, apiToken);
@@ -54,7 +55,9 @@ const LinkdingFetcher = {
         for (const bm of bookmarks) {
             const tags = bm.tag_names || [];
             if (tags.length === 0) {
-                (groups['未分类'] ??= []).push(this._toServiceItem(bm));
+                if (!tagFilter) {
+                    (groups['未分类'] ??= []).push(this._toServiceItem(bm));
+                }
             } else {
                 for (const tag of tags) {
                     if (tagFilter && !tagFilter.has(tag)) continue;

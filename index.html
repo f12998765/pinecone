@@ -47,14 +47,15 @@
                     <div class="grid">
                         <template x-for="service in category.services">
                              <a :key="service.name"
-                                 :href="isValidURI(service.uri) ? service.uri : '#'"
-                                 :target="openInNewTab ? '_blank' : '_self'"
-                                 rel="noopener noreferrer"
-                                 class="service-link"
-                                 :data-text-position="textPosition"
-                                 :class="'demo-effect-' + hoverEffect"
-                                 :aria-label="'打开 ' + service.name"
-                                 :data-uri="service.uri">
+                                  :href="isValidURI(service.uri) ? service.uri : '#'"
+                                  :target="openMode === 'self' ? '_self' : '_blank'"
+                                  rel="noopener noreferrer"
+                                  class="service-link"
+                                  :data-text-position="textPosition"
+                                  :class="'demo-effect-' + hoverEffect"
+                                  :aria-label="'打开 ' + service.name"
+                                  :data-uri="service.uri"
+                                  @click="openMode === 'background' ? handleBackgroundClick($event, service.uri) : true">
                                  <img class="service-icon"
                                       :src="getServiceIcon(service.uri) || service.icon || '/assets/images/favicon.svg'"
                                      :alt="service.name"
@@ -335,15 +336,18 @@
                     <label class="setting-label">打开方式</label>
                     <div class="custom-select" x-data="{ open: false }" @click.outside="open = false">
                         <button type="button" class="cs-trigger" :aria-expanded="open" @click="open = !open" @keydown.escape="open = false"
-                            :style="{ color: openInNewTab ? '#007aff' : '#ff9f0a' }">
-                            <span x-text="openInNewTab ? '新标签页' : '当前标签页'"></span>
+                            :style="{ color: openMode === 'self' ? '#ff9f0a' : (openMode === 'background' ? '#30d158' : '#007aff') }">
+                            <span x-text="openMode === 'self' ? '当前标签页' : (openMode === 'background' ? '后台新标签' : '新标签页')"></span>
                             <svg class="cs-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                         </button>
                         <div class="cs-dropdown" x-show="open" x-cloak>
-                            <button type="button" class="cs-option" :class="{ selected: openInNewTab }" @click="openInNewTab = true; open = false" style="color:#007aff">
+                            <button type="button" class="cs-option" :class="{ selected: openMode === 'newtab' }" @click="openMode = 'newtab'; open = false" style="color:#007aff">
                                 <span>新标签页</span>
                             </button>
-                            <button type="button" class="cs-option" :class="{ selected: !openInNewTab }" @click="openInNewTab = false; open = false" style="color:#ff9f0a">
+                            <button type="button" class="cs-option" :class="{ selected: openMode === 'background' }" @click="openMode = 'background'; open = false" style="color:#30d158">
+                                <span>后台新标签</span>
+                            </button>
+                            <button type="button" class="cs-option" :class="{ selected: openMode === 'self' }" @click="openMode = 'self'; open = false" style="color:#ff9f0a">
                                 <span>当前标签页</span>
                             </button>
                         </div>
@@ -408,8 +412,8 @@
     <script defer src="assets/js/db.js"></script>
     <script defer src="assets/js/persist.js"></script>
     <script defer src="assets/js/app.js"></script>
-    <script defer src="assets/vendor/alpinejs-focus.3.15.12.min.js"></script>
     <script defer src="assets/vendor/alpinejs.3.15.12.min.js"></script>
+    <script defer src="assets/vendor/alpinejs-focus.3.15.12.min.js"></script>
 </body>
 
 </html>

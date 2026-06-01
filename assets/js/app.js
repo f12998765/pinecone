@@ -42,7 +42,6 @@ document.addEventListener('alpine:init', () => {
         linkdingError: '',
         linkdingTags: [],
         linkdingSelectedTags: Alpine.$persist([]).as('pinecone-selectedTags'),
-        openInNewTab: true,
         linkdingTagsLoading: false,
         tagModalOpen: false,
 
@@ -88,11 +87,32 @@ document.addEventListener('alpine:init', () => {
             return this.services;
         },
 
+        _sanitizeNum(val, fallback) {
+            const n = Number(val);
+            return Number.isFinite(n) ? n : fallback;
+        },
+
         async init() {
             if (!Array.isArray(this.linkdingIconSources)) this.linkdingIconSources = [];
             if (!Array.isArray(this.linkdingFilterUrls)) this.linkdingFilterUrls = [];
             if (!Array.isArray(this.linkdingSelectedTags)) this.linkdingSelectedTags = [];
             if (!this.linkdingCustomIcons || typeof this.linkdingCustomIcons !== 'object' || Array.isArray(this.linkdingCustomIcons)) this.linkdingCustomIcons = {};
+            this.iconSize = this._sanitizeNum(this.iconSize, 64);
+            this.iconRadius = this._sanitizeNum(this.iconRadius, 12);
+            this.iconOpacity = this._sanitizeNum(this.iconOpacity, 100);
+            this.iconGap = this._sanitizeNum(this.iconGap, 12);
+            this.textSize = this._sanitizeNum(this.textSize, 18);
+            this.textColor = typeof this.textColor === 'string' && this.textColor.startsWith('#') ? this.textColor : '#1a1a1a';
+            this.maxWidth = this._sanitizeNum(this.maxWidth, 1421);
+            this.textIconGap = this._sanitizeNum(this.textIconGap, 12);
+            this.gridColumns = this._sanitizeNum(this.gridColumns, 8);
+            this.hoverEffect = this._sanitizeNum(this.hoverEffect, 2);
+            this.settingsTextSize = this._sanitizeNum(this.settingsTextSize, 14);
+            this.showNames = typeof this.showNames === 'boolean' ? this.showNames : true;
+            this.openMode = ['self', 'newtab', 'background'].includes(this.openMode) ? this.openMode : 'newtab';
+            this.textPosition = ['column', 'row'].includes(this.textPosition) ? this.textPosition : 'column';
+            this.dataSource = ['local', 'linkding'].includes(this.dataSource) ? this.dataSource : 'local';
+            this.linkdingProxyEnabled = typeof this.linkdingProxyEnabled === 'boolean' ? this.linkdingProxyEnabled : false;
             if (!this.linkdingProxy) {
                 this.linkdingProxy = 'https://corsproxy.io/?url={url}';
             }
@@ -554,7 +574,7 @@ document.addEventListener('alpine:init', () => {
             this.gridColumns = 8;
             this.hoverEffect = 2;
             this.settingsTextSize = 14;
-            this.openInNewTab = true;
+            this.openMode = 'newtab';
             if (this._bgBlobUrl) {
                 URL.revokeObjectURL(this._bgBlobUrl);
                 this._bgBlobUrl = null;
@@ -581,6 +601,12 @@ document.addEventListener('alpine:init', () => {
             PineconeDB.remove('linkdingData').catch(() => {});
 
             this.applyCssVars();
+        },
+
+        handleBackgroundClick(e, uri) {
+            e.preventDefault();
+            const w = window.open(uri, '_blank');
+            if (w) setTimeout(() => window.focus(), 50);
         },
 
         imgError(e) {

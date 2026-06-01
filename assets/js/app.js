@@ -25,7 +25,7 @@ document.addEventListener('alpine:init', () => {
         gridColumns: Alpine.$persist(8).as('pinecone-gridColumns'),
         hoverEffect: Alpine.$persist(2).as('pinecone-hoverEffect'),
         settingsTextSize: Alpine.$persist(14).as('pinecone-settingsTextSize'),
-        openInNewTab: Alpine.$persist(true).as('pinecone-openInNewTab'),
+        openMode: Alpine.$persist('newtab').as('pinecone-openMode'),
 
 
         bgDataUrl: null,
@@ -42,6 +42,7 @@ document.addEventListener('alpine:init', () => {
         linkdingError: '',
         linkdingTags: [],
         linkdingSelectedTags: Alpine.$persist([]).as('pinecone-selectedTags'),
+        openInNewTab: true,
         linkdingTagsLoading: false,
         tagModalOpen: false,
 
@@ -88,6 +89,10 @@ document.addEventListener('alpine:init', () => {
         },
 
         async init() {
+            if (!Array.isArray(this.linkdingIconSources)) this.linkdingIconSources = [];
+            if (!Array.isArray(this.linkdingFilterUrls)) this.linkdingFilterUrls = [];
+            if (!Array.isArray(this.linkdingSelectedTags)) this.linkdingSelectedTags = [];
+            if (!this.linkdingCustomIcons || typeof this.linkdingCustomIcons !== 'object' || Array.isArray(this.linkdingCustomIcons)) this.linkdingCustomIcons = {};
             if (!this.linkdingProxy) {
                 this.linkdingProxy = 'https://corsproxy.io/?url={url}';
             }

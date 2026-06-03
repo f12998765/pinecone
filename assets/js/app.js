@@ -749,9 +749,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         handleBackgroundClick(e, uri) {
-            e.preventDefault();
-            const w = window.open(uri, '_blank');
-            if (w) setTimeout(() => window.focus(), 50);
+            // Let native <a target="_blank"> handle navigation
+            // but immediately refocus this tab
+            setTimeout(() => window.focus(), 50);
         },
 
         imgError(e) {

@@ -4,9 +4,14 @@ const IconFetcher = {
     _listeners: [],
     _readyListeners: [],
     _ready: false,
+    _initialized: false,
+    _generation: 0,
 
     init() {
+        if (this._initialized) return;
+        this._initialized = true;
         this._cache = {};
+        this._generation = 0;
         PineconeDB.get('pinecone-iconMap').then(data => {
             if (data && typeof data === 'object') this._cache = data;
             this._setReady();
@@ -40,7 +45,7 @@ const IconFetcher = {
     _saveCache() {
         clearTimeout(this._saveTimer);
         this._saveTimer = setTimeout(() => {
-            PineconeDB.set('pinecone-iconMap', this._cache).catch(() => {});
+            PineconeDB.set('pinecone-iconMap', this._cache).catch(e => console.warn('icon cache save failed', e));
         }, 300);
     },
 
@@ -49,13 +54,16 @@ const IconFetcher = {
         if (this._cache?.[domain]) return Promise.resolve(this._cache[domain]);
         if (this._resolving[domain]) return this._resolving[domain];
 
+        const gen = this._generation;
         const promise = this._runChain(domain).then(url => {
+            if (gen !== this._generation) return url;
             if (this._cache) this._cache[domain] = url;
             this._saveCache();
             this._notify(domain, url);
             delete this._resolving[domain];
             return url;
         }).catch(() => {
+            if (gen !== this._generation) return '/assets/images/favicon.svg';
             this._notify(domain, '/assets/images/favicon.svg');
             delete this._resolving[domain];
             return '/assets/images/favicon.svg';
@@ -94,29 +102,27 @@ const IconFetcher = {
     _checkImg(url) {
         return Promise.race([
             new Promise(resolve => { const i = new Image(); i.onload = () => resolve(true); i.onerror = () => resolve(false); i.src = url; }),
-            new Promise(resolve => setTimeout(() => resolve(false), 2000))
+            new Promise(resolve => setTimeout(() => resolve(false), 4000))
         ]);
     },
 
-    async fetchAllIconOptions(domain, { onProgress, onItem, customSources, checkAborted }) {
+    async fetchAllIconOptions(domain, { onProgress, onItem, customSources }) {
         const qs = `_=${Date.now()}`;
         let completed = 0;
         const total = 4 + (customSources?.length || 0);
         const trySource = async (url, label) => {
-            if (checkAborted?.()) return false;
             const ok = await this._checkImg(url);
-            if (ok && onItem && !checkAborted?.()) onItem({ url, label });
+            if (ok && onItem) onItem({ url, label });
             return ok;
         };
-        const tick = () => { completed++; if (onProgress && !checkAborted?.()) onProgress(`正在获取图标 (${completed}/${total})...`); };
+        const tick = () => { completed++; if (onProgress) onProgress(`正在获取图标 (${completed}/${total})...`); };
 
         const tasks = [
             trySource(`https://twenty-icons.com/${domain}?${qs}`, 'twenty-icons').then(tick),
             trySource(`https://favicon.im/${domain}?throw-error-on-404=true&larger=true&${qs}`, 'favicon.im').then(tick),
             (async () => {
-                if (checkAborted?.()) return;
                 const url = await this._tryVemetric(domain);
-                if (url && onItem && !checkAborted?.()) onItem({ url, label: 'favicon.vemetric' });
+                if (url && onItem) onItem({ url, label: 'favicon.vemetric' });
             })().then(tick),
             trySource(`https://${domain}/apple-touch-icon.png?${qs}`, 'apple-touch-icon').then(tick),
         ];
@@ -127,13 +133,14 @@ const IconFetcher = {
         }
 
         await Promise.allSettled(tasks);
-        if (!checkAborted?.() && onProgress) onProgress('');
+        if (onProgress) onProgress('');
     },
 
     refreshCache() {
         this._cache = {};
         this._resolving = {};
-        PineconeDB.remove('pinecone-iconMap').catch(() => {});
+        this._generation++;
+        PineconeDB.remove('pinecone-iconMap').catch(e => console.warn('PineconeDB.remove failed: pinecone-iconMap', e));
     },
 
     extractDomain(uri) {

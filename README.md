@@ -40,7 +40,7 @@
 ├── linkding-fetcher.js     # Linkding API 封装
 ├── persist.js              # 自定义 Alpine.js persist 插件（IndexedDB）
 ├── db.js                   # IndexedDB 封装（PineconeDB）
-├── service-worker.js       # PWA 离线缓存
+├── sw.js                   # Service Worker（PWA 离线缓存）
 ├── services.json           # 本地书签数据
 └── manifest.json           # PWA 清单
 ```

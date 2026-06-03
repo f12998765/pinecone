@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
@@ -23,13 +23,18 @@
               @touchmove="handleContainerTouchEnd"
              @click="handleContainerClick"
              @contextmenu="handleContainerContextMenu">
-            <template x-if="error">
+            <template x-if="dataSourceLoading && !error">
+                <div class="empty-state">
+                    <p>加载中…</p>
+                </div>
+            </template>
+            <template x-if="!dataSourceLoading && error">
                 <div class="error-message">
                     <p>无法加载服务列表，请检查网络连接</p>
                     <button class="retry-btn" @click="loadServices">重试</button>
                 </div>
             </template>
-            <template x-if="!error && services.length === 0">
+            <template x-if="!dataSourceLoading && !error && services.length === 0">
                 <div class="empty-state">
                     <p>暂无书签数据</p>
                     <p class="empty-hint">在设置中切换到 Linkding 并获取书签，或检查网络连接</p>
@@ -88,6 +93,7 @@
 
     <!-- Context Menu -->
     <div x-show="contextMenu.show"
+         x-transition.opacity.duration.150ms
          class="context-menu-overlay"
          @click.self="hideContextMenu"
          @contextmenu.self.prevent="hideContextMenu">
@@ -105,7 +111,7 @@
     </div>
 
     <!-- Custom Icon Modal -->
-    <div x-show="customIconModal.show" class="modal-overlay" @click.self="cancelCustomIcon" @contextmenu.self.prevent="cancelCustomIcon" @keydown.escape.window="cancelCustomIcon">
+    <div x-show="customIconModal.show" x-transition.opacity.duration.200ms class="modal-overlay" @click.self="cancelCustomIcon" @contextmenu.self.prevent="cancelCustomIcon" @keydown.escape.window="cancelCustomIcon" role="dialog" aria-modal="true" aria-label="自定义图标">
         <div class="modal-card">
             <div class="modal-header">
                 <span>自定义图标</span>
@@ -134,7 +140,7 @@
                 <div x-show="customIconModal.domain && customIconModal.iconDone && !customIconModal.iconOptions?.length" class="icon-picker-loading done">未获取到图标</div>
 
                 <label class="modal-label">或上传图片</label>
-                <input type="file" accept="image/*" class="file-input" @change="handleCustomIconUpload" style="margin-bottom:4px">
+                <input type="file" accept="image/*" class="file-input" x-ref="customIconFile" @change="handleCustomIconUpload" style="margin-bottom:4px">
 
                 <template x-if="customIconModal.url && (customIconModal.url.startsWith('data:') || isValidURI(customIconModal.url))">
                     <div class="modal-preview">
@@ -150,7 +156,7 @@
     </div>
 
     <!-- Tag Picker Modal -->
-    <div x-show="tagModalOpen" class="modal-overlay" @click.self="tagModalOpen = false" @keydown.escape.window="tagModalOpen = false" x-transition.opacity.duration.200ms>
+    <div x-show="tagModalOpen" class="modal-overlay" @click.self="tagModalOpen = false" @keydown.escape.window="tagModalOpen = false" x-transition.opacity.duration.200ms role="dialog" aria-modal="true" aria-label="选择标签">
         <div class="modal-card tag-picker-card">
             <div class="modal-header">
                 <span>选择标签</span>
@@ -237,9 +243,9 @@
                             <button class="ld-btn ld-btn-danger" @click="clearLinkdingData" :disabled="!services.length">清除数据</button>
                         </div>
                         <template x-if="iconRefreshStatus">
-                            <div class="linkding-status status-success" x-text="iconRefreshStatus"></div>
+                            <div class="icon-refresh-status" x-text="iconRefreshStatus"></div>
                         </template>
-                        <div x-show="linkdingError && !iconRefreshStatus" class="linkding-status" x-text="linkdingError" :class="{ 'status-success': linkdingError.includes('成功') }"></div>
+                        <div x-show="linkdingMessage && !iconRefreshStatus" class="linkding-status" :class="linkdingMessageClass" x-text="linkdingMessage"></div>
                         <div class="setting-item" style="margin-top:8px">
                             <label class="setting-label">已屏蔽地址</label>
                             <textarea class="select-input textarea-input" x-model="filterUrlsText" rows="2" placeholder='["https://example.com/page"]'></textarea>
@@ -405,6 +411,12 @@
             <button class="section-reset" @click="resetAll">重置所有设置</button>
         </div>
     </div>
+
+    <div class="sw-update-toast" x-show="swUpdateAvailable" x-transition.opacity.duration.200ms>
+        <span>新版本已就绪</span>
+        <button class="sw-update-btn" @click="applySwUpdate">刷新</button>
+        <button class="sw-update-dismiss" @click="dismissSwUpdate" aria-label="关闭">✕</button>
+    </div>
 </div>
 
     <script defer src="assets/js/icon-fetcher.js"></script>
@@ -413,7 +425,6 @@
     <script defer src="assets/js/persist.js"></script>
     <script defer src="assets/js/app.js"></script>
     <script defer src="assets/vendor/alpinejs.3.15.12.min.js"></script>
-    <script defer src="assets/vendor/alpinejs-focus.3.15.12.min.js"></script>
 </body>
 
 </html>

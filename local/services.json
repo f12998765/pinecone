@@ -1,212 +1,212 @@
 [
-	{
-		"category": "✨ 常用",
-		"services": [
-			{
-				"name": "青空",
-				"uri": "https://main.elk.zone/",
-				"icon": "/local/icons/sky.jpg"
-			},
-			{
-				"name": "Link",
-				"uri": "https://link.xizero.com/",
-				"icon": "/local/icons/linkding.webp"
-			},
-			{
-				"name": "Twitter",
-				"uri": "https://x.com/home",
-				"icon": "/local/icons/twitter.png"
-			},
-			{
-				"name": "Inoreader",
-				"uri": "https://www.inoreader.com/all_articles",
-				"icon": "/local/icons/inoreader.png"
-			},
-			{
-				"name": "Hacker News",
-				"uri": "https://news.ycombinator.com/",
-				"icon": "/local/icons/hackernews.png"
-			},
-			{
-				"name": "其乐",
-				"uri": "https://keylol.com/",
-				"icon": "/local/icons/keylol.png"
-			},
-			{
-				"name": "Switch520",
-				"uri": "https://www.gamer520.com/",
-				"icon": "/local/icons/ns.png"
-			},
-			{
-				"name": "Reddit",
-				"uri": "https://www.reddit.com/",
-				"icon": "/local/icons/reddit.png"
-			}
-		]
-	},
-	{
-		"category": "🌙 娱乐",
-		"services": [
-			{
-				"name": "哔哩哔哩",
-				"uri": "https://www.bilibili.com/",
-				"icon": "/local/icons/bilibili.png"
-			},
-			{
-				"name": "抖音",
-				"uri": "https://www.douyin.com/",
-				"icon": "/local/icons/douyin.png"
-			},
-			{
-				"name": "小红书",
-				"uri": "https://www.xiaohongshu.com/",
-				"icon": "/local/icons/redbook.png"
-			},
-			{
-				"name": "NGA",
-				"uri": "https://nga.178.com/",
-				"icon": "/local/icons/nga.png"
-			},
-			{
-				"name": "YouTube",
-				"uri": "https://www.youtube.com/",
-				"icon": "/local/icons/youtube.png"
-			},
-			{
-				"name": "Instagram",
-				"uri": "https://www.instagram.com/",
-				"icon": "/local/icons/instagram.png"
-			},
-			{
-				"name": "Twitch",
-				"uri": "https://www.twitch.tv/",
-				"icon": "/local/icons/twitch.png"
-			},
-			{
-				"name": "Discord",
-				"uri": "https://discord.com/channels/@me",
-				"icon": "/local/icons/discord.png"
-			}
-		]
-	},
-	{
-		"category": "⚡️ 工具",
-		"services": [
-			{
-				"name": "DeepSeek",
-				"uri": "https://chat.deepseek.com/",
-				"icon": "/local/icons/deepseek.png"
-			},
-			{
-				"name": "DuckDuckGo AI",
-				"uri": "https://duck.ai/",
-				"icon": "/local/icons/duckduckgo.png"
-			},
-			{
-				"name": "Microsoft Copilot",
-				"uri": "https://copilot.microsoft.com/",
-				"icon": "/local/icons/copilot-color.svg"
-			},
-			{
-				"name": "Gemini",
-				"uri": "https://gemini.google.com/app",
-				"icon": "/local/icons/gemini.png"
-			},
-			{
-				"name": "Qwen",
-				"uri": "https://chat.qwen.ai/",
-				"icon": "/local/icons/qwen.png"
-			},
-			{
-				"name": "OutLook",
-				"uri": "https://outlook.live.com/mail/0/inbox/",
-				"icon": "/local/icons/outlook.png"
-			},
-			{
-				"name": "OneDrive",
-				"uri": "https://onedrive.live.com/",
-				"icon": "/local/icons/onedrive.png"
-			},
-			{
-				"name": "临时邮箱",
-				"uri": "https://www.emailtick.com/zh",
-				"icon": "/local/icons/tempemail.png"
-			}
-		]
-	},
-	{
-		"category": "🎮 游戏",
-		"services": [
-			{
-				"name": "Todo.txt",
-				"uri": "https://xizero.com/todo.txt/",
-				"icon": "/local/icons/todo.jpg"
-			},
-			{
-				"name": "FFXIV Wiki",
-				"uri": "https://ff14.huijiwiki.com/wiki/%E9%A6%96%E9%A1%B5",
-				"icon": "/local/icons/ffxiv_wiki.webp"
-			},
-			{
-				"name": "艾欧泽亚售楼中心",
-				"uri": "https://house.ffxiv.cyou/",
-				"icon": "/local/icons/ffxiv_house.png"
-			},
-			{
-				"name": "Soulframe Wiki",
-				"uri": "https://wiki.avakot.org/",
-				"icon": "/local/icons/soulframe_wiki.png"
-			},
-			{
-				"name": "Warframe 中文维基",
-				"uri": "https://warframe.huijiwiki.com/wiki/Mainpage",
-				"icon": "/local/icons/warframe_huiji_wiki.webp"
-			},
-			{
-				"name": "Warframe Wiki",
-				"uri": "https://wiki.warframe.com/",
-				"icon": "/local/icons/warframe_wiki.webp"
-			},
-			{
-				"name": "Warframe Market",
-				"uri": "https://warframe.market/zh-hans/",
-				"icon": "/local/icons/wm.webp"
-			},
-			{
-				"name": "Warframe 掉宝",
-				"uri": "https://warframestreams.lol/",
-				"icon": "/local/icons/warframestreams.png"
-			}
-		]
-	},
-	{
-		"category": "🍀 社区",
-		"services": [
-			{
-				"name": "v2ex",
-				"uri": "https://www.v2ex.com/",
-				"icon": "/local/icons/v2ex.png"
-			},
-			{
-				"name": "Linux do",
-				"uri": "https://linux.do/",
-				"icon": "/local/icons/linuxdo.webp"
-			},
-			{
-				"name": "NodeSeek",
-				"uri": "https://www.nodeseek.com/",
-				"icon": "/local/icons/nodeseek.png"
-			},
-			{
-				"name": "Github",
-				"uri": "https://www.github.com/",
-				"icon": "/local/icons/github.png"
-			},
-			{
-				"name": "Bangumi",
-				"uri": "https://bgm.tv/",
-				"icon": "/local/icons/bgmtv.png"
-			}
-		]
-	}
+    {
+        "category": "✨ 常用",
+        "services": [
+            {
+                "name": "青空",
+                "uri": "https://main.elk.zone/",
+                "icon": "/local/icons/sky.jpg"
+            },
+            {
+                "name": "Link",
+                "uri": "https://link.xizero.com/",
+                "icon": "/local/icons/linkding.webp"
+            },
+            {
+                "name": "Twitter",
+                "uri": "https://x.com/home",
+                "icon": "/local/icons/twitter.png"
+            },
+            {
+                "name": "Inoreader",
+                "uri": "https://www.inoreader.com/all_articles",
+                "icon": "/local/icons/inoreader.png"
+            },
+            {
+                "name": "Hacker News",
+                "uri": "https://news.ycombinator.com/",
+                "icon": "/local/icons/hackernews.png"
+            },
+            {
+                "name": "其乐",
+                "uri": "https://keylol.com/",
+                "icon": "/local/icons/keylol.png"
+            },
+            {
+                "name": "Switch520",
+                "uri": "https://www.gamer520.com/",
+                "icon": "/local/icons/ns.png"
+            },
+            {
+                "name": "Reddit",
+                "uri": "https://www.reddit.com/",
+                "icon": "/local/icons/reddit.png"
+            }
+        ]
+    },
+    {
+        "category": "🌙 娱乐",
+        "services": [
+            {
+                "name": "哔哩哔哩",
+                "uri": "https://www.bilibili.com/",
+                "icon": "/local/icons/bilibili.png"
+            },
+            {
+                "name": "抖音",
+                "uri": "https://www.douyin.com/",
+                "icon": "/local/icons/douyin.png"
+            },
+            {
+                "name": "小红书",
+                "uri": "https://www.xiaohongshu.com/",
+                "icon": "/local/icons/redbook.png"
+            },
+            {
+                "name": "NGA",
+                "uri": "https://nga.178.com/",
+                "icon": "/local/icons/nga.png"
+            },
+            {
+                "name": "YouTube",
+                "uri": "https://www.youtube.com/",
+                "icon": "/local/icons/youtube.png"
+            },
+            {
+                "name": "Instagram",
+                "uri": "https://www.instagram.com/",
+                "icon": "/local/icons/instagram.png"
+            },
+            {
+                "name": "Twitch",
+                "uri": "https://www.twitch.tv/",
+                "icon": "/local/icons/twitch.png"
+            },
+            {
+                "name": "Discord",
+                "uri": "https://discord.com/channels/@me",
+                "icon": "/local/icons/discord.png"
+            }
+        ]
+    },
+    {
+        "category": "⚡️ 工具",
+        "services": [
+            {
+                "name": "DeepSeek",
+                "uri": "https://chat.deepseek.com/",
+                "icon": "/local/icons/deepseek.png"
+            },
+            {
+                "name": "DuckDuckGo AI",
+                "uri": "https://duck.ai/",
+                "icon": "/local/icons/duckduckgo.png"
+            },
+            {
+                "name": "Microsoft Copilot",
+                "uri": "https://copilot.microsoft.com/",
+                "icon": "/local/icons/copilot-color.svg"
+            },
+            {
+                "name": "Gemini",
+                "uri": "https://gemini.google.com/app",
+                "icon": "/local/icons/gemini.png"
+            },
+            {
+                "name": "Qwen",
+                "uri": "https://chat.qwen.ai/",
+                "icon": "/local/icons/qwen.png"
+            },
+            {
+                "name": "OutLook",
+                "uri": "https://outlook.live.com/mail/0/inbox/",
+                "icon": "/local/icons/outlook.png"
+            },
+            {
+                "name": "OneDrive",
+                "uri": "https://onedrive.live.com/",
+                "icon": "/local/icons/onedrive.png"
+            },
+            {
+                "name": "临时邮箱",
+                "uri": "https://www.emailtick.com/zh",
+                "icon": "/local/icons/tempemail.png"
+            }
+        ]
+    },
+    {
+        "category": "🎮 游戏",
+        "services": [
+            {
+                "name": "Todo.txt",
+                "uri": "https://xizero.com/todo.txt/",
+                "icon": "/local/icons/todo.jpg"
+            },
+            {
+                "name": "FFXIV Wiki",
+                "uri": "https://ff14.huijiwiki.com/wiki/%E9%A6%96%E9%A1%B5",
+                "icon": "/local/icons/ffxiv_wiki.webp"
+            },
+            {
+                "name": "艾欧泽亚售楼中心",
+                "uri": "https://house.ffxiv.cyou/",
+                "icon": "/local/icons/ffxiv_house.png"
+            },
+            {
+                "name": "Soulframe Wiki",
+                "uri": "https://wiki.avakot.org/",
+                "icon": "/local/icons/soulframe_wiki.png"
+            },
+            {
+                "name": "Warframe 中文维基",
+                "uri": "https://warframe.huijiwiki.com/wiki/Mainpage",
+                "icon": "/local/icons/warframe_huiji_wiki.webp"
+            },
+            {
+                "name": "Warframe Wiki",
+                "uri": "https://wiki.warframe.com/",
+                "icon": "/local/icons/warframe_wiki.webp"
+            },
+            {
+                "name": "Warframe Market",
+                "uri": "https://warframe.market/zh-hans/",
+                "icon": "/local/icons/wm.webp"
+            },
+            {
+                "name": "Warframe 掉宝",
+                "uri": "https://warframestreams.lol/",
+                "icon": "/local/icons/warframestreams.png"
+            }
+        ]
+    },
+    {
+        "category": "🍀 社区",
+        "services": [
+            {
+                "name": "v2ex",
+                "uri": "https://www.v2ex.com/",
+                "icon": "/local/icons/v2ex.png"
+            },
+            {
+                "name": "Linux do",
+                "uri": "https://linux.do/",
+                "icon": "/local/icons/linuxdo.webp"
+            },
+            {
+                "name": "NodeSeek",
+                "uri": "https://www.nodeseek.com/",
+                "icon": "/local/icons/nodeseek.png"
+            },
+            {
+                "name": "Github",
+                "uri": "https://www.github.com/",
+                "icon": "/local/icons/github.png"
+            },
+            {
+                "name": "Bangumi",
+                "uri": "https://bgm.tv/",
+                "icon": "/local/icons/bgmtv.png"
+            }
+        ]
+    }
 ]

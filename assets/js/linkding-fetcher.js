@@ -69,13 +69,21 @@ const LinkdingFetcher = {
     },
 
     _toServiceItem(bm) {
-        return { name: bm.title || bm.website_title || bm.url, uri: bm.url, icon: '' };
+        return { name: bm.title || bm.website_title || bm.url || 'Untitled', uri: bm.url, icon: '' };
+    },
+
+    _validateHttpUrl(url, emptyMsg, protoMsg, formatMsg) {
+        if (!url || typeof url !== 'string') return emptyMsg;
+        try { const u = new URL(url); if (!u.protocol.startsWith('http')) return protoMsg; return null; }
+        catch { return formatMsg; }
     },
 
     validateUrl(url) {
-        if (!url || typeof url !== 'string') return '请输入 API 地址';
-        try { const u = new URL(url); if (!u.protocol.startsWith('http')) return '地址必须以 http:// 或 https:// 开头'; return null; }
-        catch { return 'API 地址格式不正确'; }
+        return this._validateHttpUrl(url, '请输入 API 地址', '地址必须以 http:// 或 https:// 开头', 'API 地址格式不正确');
+    },
+
+    validateProxy(url) {
+        return this._validateHttpUrl(url, '请输入代理地址', '代理地址必须以 http:// 或 https:// 开头', '代理地址格式不正确');
     },
 
     validateToken(token) {

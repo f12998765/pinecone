@@ -30,7 +30,6 @@
     --text-tertiary: #aeaeb2;
     --text-icon: #8e8e93;
     --border-primary: #e5e5ea;
-    --border-secondary: #e5e5ea;
     --border-switch: #c7c7cc;
     --shadow-icon: 0 2px 8px rgba(0,0,0,0.08);
     --shadow-floating: 0 4px 12px rgba(0,0,0,0.12);
@@ -658,6 +657,15 @@ input:checked + .slider:before { transform: translateX(18px); }
 }
 
 .linkding-status.status-success { color: var(--color-green); }
+.linkding-status.status-info { color: var(--color-blue); }
+.linkding-status.status-error { color: var(--color-red); }
+
+.icon-refresh-status {
+    font-size: 0.85em;
+    color: var(--color-gray);
+    margin-top: 8px;
+    text-align: center;
+}
 
 .section-reset {
     display: block;
@@ -936,7 +944,7 @@ input:checked + .slider:before { transform: translateX(18px); }
     border-radius: var(--radius-sm);
 }
 
-.icon-picker-loading.done { color: var(--color-red); }
+.icon-picker-loading.done { color: var(--text-secondary); }
 
 .icon-progress-label { font-weight: 600; color: var(--color-blue); }
 
@@ -1024,3 +1032,47 @@ input:checked + .slider:before { transform: translateX(18px); }
     .modal-body { flex: 1; overflow-y: auto; }
     .modal-footer { flex-shrink: 0; }
 }
+
+.sw-update-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg-floating);
+    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-floating);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    font-size: 0.9em;
+    z-index: 1000;
+}
+
+.sw-update-btn {
+    padding: 4px 12px;
+    background: var(--color-blue);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.sw-update-btn:hover { background: var(--color-blue-dark); }
+
+.sw-update-dismiss {
+    padding: 0 4px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1em;
+    line-height: 1;
+}
+
+.sw-update-dismiss:hover { color: var(--text-primary); }

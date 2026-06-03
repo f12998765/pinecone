@@ -12,7 +12,7 @@ const PineconeDB = {
                     e.target.result.createObjectStore('kv');
             };
             req.onsuccess = e => resolve(this._db = e.target.result);
-            req.onerror = () => { this._openFailed = true; reject(req.error); };
+            req.onerror = () => { this._openFailed = true; console.error('PineconeDB open failed:', req.error); reject(req.error); };
         });
     },
 

@@ -25,6 +25,6 @@ const PineconeDB = {
     },
 
     get(key)    { return this._request('readonly',  s => s.get(key)); },
-    set(key, v) { return this._request('readwrite', s => s.put(v, key)); },
-    remove(key) { return this._request('readwrite', s => s.delete(key)); },
+    set(key, v) { return this._request('readwrite', s => s.put(v, key)).catch(e => console.warn('PineconeDB failed: set', key, e)); },
+    remove(key) { return this._request('readwrite', s => s.delete(key)).catch(e => console.warn('PineconeDB failed: remove', key, e)); },
 };

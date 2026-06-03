@@ -52,7 +52,7 @@
                     <div class="grid">
                         <template x-for="service in category.services">
                              <a :key="service.name"
-                                  :href="isValidURI(service.uri) ? service.uri : '#'"
+                                  :href="service._validUri ? service.uri : '#'"
                                   :target="openMode === 'self' ? '_self' : '_blank'"
                                   rel="noopener noreferrer"
                                   class="service-link"
@@ -249,18 +249,18 @@
                         <div class="setting-item" style="margin-top:8px">
                             <label class="setting-label">已屏蔽地址</label>
                             <textarea class="select-input textarea-input" x-model="filterUrlsText" rows="2" placeholder='["https://example.com/page"]'></textarea>
-                            <button class="btn btn-primary w-full" style="margin-top:10px" @click="applyFilterUrls" x-show="filterUrlsText !== JSON.stringify(linkdingFilterUrls, null, 2)">应用</button>
+                            <button class="btn btn-primary w-full" style="margin-top:10px" @click="applyFilterUrls" x-show="filterUrlsChanged">应用</button>
                         </div>
                         <div class="setting-item" style="border-bottom:none">
                             <label class="setting-label">自定义图标</label>
                             <textarea class="select-input textarea-input" x-model="customIconsText" rows="2" placeholder='{"https://example.com/page": "https://..."}'></textarea>
-                            <button class="btn btn-primary w-full" style="margin-top:10px" @click="applyCustomIcons" x-show="customIconsText !== JSON.stringify(linkdingCustomIcons, null, 2)">应用</button>
+                            <button class="btn btn-primary w-full" style="margin-top:10px" @click="applyCustomIcons" x-show="customIconsChanged">应用</button>
                         </div>
                         <div class="setting-item" style="border-bottom:none;margin-top:8px">
                             <label class="setting-label">自定义图标源</label>
                             <div class="setting-desc">每行一个 URL，用 {domain} 占位，仅在自定义图标时使用</div>
                             <textarea class="select-input textarea-input" x-model="iconSourcesText" rows="3" placeholder="https://icons.example.com/{domain}/icon.png"></textarea>
-                            <button class="btn btn-primary w-full" style="margin-top:10px" @click="applyIconSources" x-show="iconSourcesText !== (linkdingIconSources || []).join('\n')">应用</button>
+                            <button class="btn btn-primary w-full" style="margin-top:10px" @click="applyIconSources" x-show="iconSourcesChanged">应用</button>
                         </div>
                     </div>
                 </template>

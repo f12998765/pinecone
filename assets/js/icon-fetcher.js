@@ -45,7 +45,7 @@ const IconFetcher = {
     _saveCache() {
         clearTimeout(this._saveTimer);
         this._saveTimer = setTimeout(() => {
-            PineconeDB.set('pinecone-iconMap', this._cache).catch(e => console.warn('icon cache save failed', e));
+            PineconeDB.set('pinecone-iconMap', this._cache);
         }, 300);
     },
 
@@ -140,7 +140,7 @@ const IconFetcher = {
         this._cache = {};
         this._resolving = {};
         this._generation++;
-        PineconeDB.remove('pinecone-iconMap').catch(e => console.warn('PineconeDB.remove failed: pinecone-iconMap', e));
+        PineconeDB.remove('pinecone-iconMap');
     },
 
     extractDomain(uri) {

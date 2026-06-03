@@ -1,4 +1,7 @@
 
+const VALID_MESSAGE_TYPES = new Set(['info', 'success', 'error']);
+const TAG_COLORS = ['#ff2d55','#ff9500','#ffcc02','#34c759','#007aff','#5856d6','#af52de','#ff6482','#00c7be','#32ade6'];
+
 // Alpine component
 document.addEventListener('alpine:init', () => {
     Alpine.data('app', () => ({
@@ -79,7 +82,28 @@ document.addEventListener('alpine:init', () => {
         _refreshStatusTimer: null,
         iconRefreshStatus: '',
         dataSourceLoading: false,
+        _customIconGen: 0,
+        _bgGen: 0,
         swUpdateAvailable: false,
+        _serializedFilterUrls: '',
+        _serializedCustomIcons: '',
+        _serializedIconSources: '',
+
+        get filterUrlsChanged() {
+            return this.filterUrlsText !== this._serializedFilterUrls;
+        },
+
+        get customIconsChanged() {
+            return this.customIconsText !== this._serializedCustomIcons;
+        },
+
+        get iconSourcesChanged() {
+            return this.iconSourcesText !== this._serializedIconSources;
+        },
+
+        get _proxy() {
+            return this.linkdingProxyEnabled ? this.linkdingProxy : '';
+        },
 
         get activeServices() {
             if (this.dataSource === 'linkding' && this.linkdingFilterUrls?.length) {
@@ -100,9 +124,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         _setMessage(text, type = 'info') {
-            const validTypes = new Set(['info', 'success', 'error']);
             this.linkdingMessage = text;
-            this.linkdingMessageType = text ? (validTypes.has(type) ? type : 'info') : '';
+            this.linkdingMessageType = text ? (VALID_MESSAGE_TYPES.has(type) ? type : 'info') : '';
             clearTimeout(this._messageTimer);
             if (text && type !== 'error') {
                 this._messageTimer = setTimeout(() => {
@@ -114,16 +137,24 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        _ensureArray(key, fallback = []) {
+            if (!Array.isArray(this[key])) this[key] = fallback;
+        },
+
+        _ensureObject(key) {
+            if (!this[key] || typeof this[key] !== 'object' || Array.isArray(this[key])) this[key] = {};
+        },
+
         _sanitizeNum(val, fallback) {
             const n = Number(val);
             return Number.isFinite(n) ? n : fallback;
         },
 
         async init() {
-            if (!Array.isArray(this.linkdingIconSources)) this.linkdingIconSources = [];
-            if (!Array.isArray(this.linkdingFilterUrls)) this.linkdingFilterUrls = [];
-            if (!Array.isArray(this.linkdingSelectedTags)) this.linkdingSelectedTags = [];
-            if (!this.linkdingCustomIcons || typeof this.linkdingCustomIcons !== 'object' || Array.isArray(this.linkdingCustomIcons)) this.linkdingCustomIcons = {};
+            this._ensureArray('linkdingIconSources');
+            this._ensureArray('linkdingFilterUrls');
+            this._ensureArray('linkdingSelectedTags');
+            this._ensureObject('linkdingCustomIcons');
             this.iconSize = this._sanitizeNum(this.iconSize, 64);
             this.iconRadius = this._sanitizeNum(this.iconRadius, 12);
             this.iconOpacity = this._sanitizeNum(this.iconOpacity, 100);
@@ -183,11 +214,14 @@ document.addEventListener('alpine:init', () => {
                 this.bgDataUrl = this._bgBlobUrl;
             } else if (legacyBgUrl) {
                 this.bgDataUrl = legacyBgUrl;
-                PineconeDB.remove('bgDataUrl').catch(e => console.warn('PineconeDB.remove failed: bgDataUrl', e));
+                PineconeDB.remove('bgDataUrl');
             }
-            this.filterUrlsText = JSON.stringify(this.linkdingFilterUrls || [], null, 2);
-            this.customIconsText = JSON.stringify(this.linkdingCustomIcons || {}, null, 2);
-            this.iconSourcesText = (this.linkdingIconSources || []).join('\n');
+            this._serializedFilterUrls = JSON.stringify(this.linkdingFilterUrls || [], null, 2);
+            this.filterUrlsText = this._serializedFilterUrls;
+            this._serializedCustomIcons = JSON.stringify(this.linkdingCustomIcons || {}, null, 2);
+            this.customIconsText = this._serializedCustomIcons;
+            this._serializedIconSources = (this.linkdingIconSources || []).join('\n');
+            this.iconSourcesText = this._serializedIconSources;
 
             await this.loadServices();
             this._buildServiceMap();
@@ -195,15 +229,18 @@ document.addEventListener('alpine:init', () => {
             this.applyBg();
 
             this.$watch('linkdingFilterUrls', () => {
+                this._serializedFilterUrls = JSON.stringify(this.linkdingFilterUrls || [], null, 2);
                 if (document.activeElement?.tagName !== 'TEXTAREA')
-                    this.filterUrlsText = JSON.stringify(this.linkdingFilterUrls || [], null, 2);
+                    this.filterUrlsText = this._serializedFilterUrls;
             });
             this.$watch('linkdingCustomIcons', () => {
+                this._serializedCustomIcons = JSON.stringify(this.linkdingCustomIcons || {}, null, 2);
                 if (document.activeElement?.tagName !== 'TEXTAREA')
-                    this.customIconsText = JSON.stringify(this.linkdingCustomIcons || {}, null, 2);
+                    this.customIconsText = this._serializedCustomIcons;
             });
             this.$watch('linkdingIconSources', () => {
-                this.iconSourcesText = (this.linkdingIconSources || []).join('\n');
+                this._serializedIconSources = (this.linkdingIconSources || []).join('\n');
+                this.iconSourcesText = this._serializedIconSources;
             });
 
             const cssVarKeys = ['iconSize','iconRadius','iconOpacity','iconGap','textSize',
@@ -213,7 +250,8 @@ document.addEventListener('alpine:init', () => {
             this.$watch('dataSource', () => this.loadServices(true));
             this.$watch('services', () => this._buildServiceMap());
 
-            window.addEventListener('resize', () => this.applyCssVars());
+            let rt;
+            window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => this.applyCssVars(), 100); });
             window.addEventListener('pinecone:sw-update', () => { this.swUpdateAvailable = true; });
         },
 
@@ -281,7 +319,11 @@ document.addEventListener('alpine:init', () => {
             return services
                 .map(cat => ({
                     ...cat,
-                    services: cat.services.filter(s => this._isValidService(s))
+                    services: cat.services.filter(s => {
+                        if (!this._isValidService(s)) return false;
+                        s._validUri = true;
+                        return true;
+                    })
                 }))
                 .filter(cat => cat.services.length > 0);
         },
@@ -341,8 +383,8 @@ document.addEventListener('alpine:init', () => {
             this.linkdingSelectedTags = [];
             this.services = [];
             this.customIconDataUrls = {};
-            PineconeDB.remove('linkdingData').catch(e => console.warn('PineconeDB.remove failed: linkdingData', e));
-            PineconeDB.remove('pinecone-customIconDataUrls').catch(e => console.warn('PineconeDB.remove failed: pinecone-customIconDataUrls', e));
+            PineconeDB.remove('linkdingData');
+            PineconeDB.remove('pinecone-customIconDataUrls');
             IconFetcher.refreshCache();
             this.iconMap = {};
             this._setMessage('Linkding 数据与图标缓存已清除', 'info');
@@ -353,8 +395,19 @@ document.addEventListener('alpine:init', () => {
         tagColor(name) {
             let h = 0;
             for (let i = 0; i < name.length; i++) h = (name.charCodeAt(i) + ((h << 5) - h)) | 0;
-            const colors = ['#ff2d55','#ff9500','#ffcc02','#34c759','#007aff','#5856d6','#af52de','#ff6482','#00c7be','#32ade6'];
-            return colors[Math.abs(h) % colors.length];
+            return TAG_COLORS[Math.abs(h) % TAG_COLORS.length];
+        },
+
+        _validateLinkding() {
+            const urlErr = LinkdingFetcher.validateUrl(this.linkdingUrl);
+            if (urlErr) { this._setMessage(urlErr, 'error'); return false; }
+            const tokenErr = LinkdingFetcher.validateToken(this.linkdingToken);
+            if (tokenErr) { this._setMessage(tokenErr, 'error'); return false; }
+            if (this.linkdingProxyEnabled) {
+                const proxyErr = LinkdingFetcher.validateProxy(this.linkdingProxy);
+                if (proxyErr) { this._setMessage(proxyErr, 'error'); return false; }
+            }
+            return true;
         },
 
         async handleTagButton() {
@@ -370,21 +423,14 @@ document.addEventListener('alpine:init', () => {
         },
 
         async fetchLinkdingTags() {
-            const urlErr = LinkdingFetcher.validateUrl(this.linkdingUrl);
-            if (urlErr) { this._setMessage(urlErr, 'error'); return; }
-            const tokenErr = LinkdingFetcher.validateToken(this.linkdingToken);
-            if (tokenErr) { this._setMessage(tokenErr, 'error'); return; }
-            if (this.linkdingProxyEnabled) {
-                const proxyErr = LinkdingFetcher.validateProxy(this.linkdingProxy);
-                if (proxyErr) { this._setMessage(proxyErr, 'error'); return; }
-            }
+            if (!this._validateLinkding()) return;
 
             this.linkdingTagsLoading = true;
             try {
                 const tags = await LinkdingFetcher.fetchTags(
                     this.linkdingUrl,
                     this.linkdingToken,
-                    this.linkdingProxyEnabled ? this.linkdingProxy : ''
+                    this._proxy
                 );
                 this.linkdingTags = tags.sort((a, b) => b.count - a.count);
                 const validNames = new Set(tags.map(t => t.name));
@@ -397,25 +443,18 @@ document.addEventListener('alpine:init', () => {
         },
 
         async syncLinkding() {
-            const urlErr = LinkdingFetcher.validateUrl(this.linkdingUrl);
-            if (urlErr) { this._setMessage(urlErr, 'error'); return; }
-            const tokenErr = LinkdingFetcher.validateToken(this.linkdingToken);
-            if (tokenErr) { this._setMessage(tokenErr, 'error'); return; }
-            if (this.linkdingProxyEnabled) {
-                const proxyErr = LinkdingFetcher.validateProxy(this.linkdingProxy);
-                if (proxyErr) { this._setMessage(proxyErr, 'error'); return; }
-            }
+            if (!this._validateLinkding()) return;
 
             this.linkdingLoading = true;
             this._setMessage('');
 
             try {
-                const data = await LinkdingFetcher.fetchBookmarks(this.linkdingUrl, this.linkdingToken, this.linkdingSelectedTags, this.linkdingProxyEnabled ? this.linkdingProxy : '');
+                const data = await LinkdingFetcher.fetchBookmarks(this.linkdingUrl, this.linkdingToken, this.linkdingSelectedTags, this._proxy);
                 const orderMap = new Map(this.linkdingSelectedTags.map((n, i) => [n, i]));
                 data.sort((a, b) => (orderMap.get(a.category) ?? 999) - (orderMap.get(b.category) ?? 999));
                 this.linkdingData = data;
                 this.services = this._filterInvalid(data);
-                PineconeDB.set('linkdingData', data).catch(e => console.warn('PineconeDB.set failed: linkdingData', e));
+                PineconeDB.set('linkdingData', data);
                 const count = data.reduce((s, c) => s + c.services.length, 0);
                 this._setMessage(`同步成功，共 ${count} 个书签`, 'success');
 
@@ -517,7 +556,7 @@ document.addEventListener('alpine:init', () => {
                 this.customIconModal.iconDone = true;
                 return;
             }
-            const gen = (this._customIconGen = (this._customIconGen ?? 0) + 1);
+            const gen = ++this._customIconGen;
             const customSources = (this.linkdingIconSources || []).filter(Boolean);
             IconFetcher.fetchAllIconOptions(domain, {
                 onProgress: label => {
@@ -541,7 +580,7 @@ document.addEventListener('alpine:init', () => {
             const trimmed = url.trim();
             if (trimmed.startsWith('data:')) {
                 this.customIconDataUrls = { ...this.customIconDataUrls, [uri]: trimmed };
-                PineconeDB.set('pinecone-customIconDataUrls', this.customIconDataUrls).catch(e => console.warn('PineconeDB.set failed: pinecone-customIconDataUrls', e));
+                PineconeDB.set('pinecone-customIconDataUrls', this.customIconDataUrls);
             } else {
                 this.linkdingCustomIcons = { ...this.linkdingCustomIcons, [uri]: trimmed };
             }
@@ -626,6 +665,13 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        _revokeBgBlobUrl() {
+            if (this._bgBlobUrl) {
+                URL.revokeObjectURL(this._bgBlobUrl);
+                this._bgBlobUrl = null;
+            }
+        },
+
         handleBgUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -635,36 +681,24 @@ document.addEventListener('alpine:init', () => {
                     return;
                 }
             }
-            // Revoke old blob URL
-            if (this._bgBlobUrl) {
-                URL.revokeObjectURL(this._bgBlobUrl);
-                this._bgBlobUrl = null;
-            }
-            // Create blob URL for immediate display
+            this._revokeBgBlobUrl();
             this._bgBlobUrl = URL.createObjectURL(file);
             this.bgDataUrl = this._bgBlobUrl;
             
-            // Store as ArrayBuffer in IndexedDB
-            const gen = (this._bgGen = (this._bgGen ?? 0) + 1);
+            const gen = ++this._bgGen;
             const reader = new FileReader();
             reader.onload = (ev) => {
                 if (gen !== this._bgGen) return;
-                PineconeDB.set('bgDataBlob', {
-                    type: file.type,
-                    data: new Uint8Array(ev.target.result)
-                }).catch(e => console.warn('PineconeDB.set failed: bgDataBlob', e));
+                PineconeDB.set('bgDataBlob', { type: file.type, data: new Uint8Array(ev.target.result) });
             };
             reader.readAsArrayBuffer(file);
         },
 
         resetBg() {
-            if (this._bgBlobUrl) {
-                URL.revokeObjectURL(this._bgBlobUrl);
-                this._bgBlobUrl = null;
-            }
+            this._revokeBgBlobUrl();
             this.bgDataUrl = null;
-            PineconeDB.remove('bgDataBlob').catch(e => console.warn('PineconeDB.remove failed: bgDataBlob', e));
-            PineconeDB.remove('bgDataUrl').catch(e => console.warn('PineconeDB.remove failed: bgDataUrl', e));
+            PineconeDB.remove('bgDataBlob');
+            PineconeDB.remove('bgDataUrl');
             if (this.$refs.bgFileInput) this.$refs.bgFileInput.value = '';
         },
 
@@ -683,10 +717,7 @@ document.addEventListener('alpine:init', () => {
             this.hoverEffect = 2;
             this.settingsTextSize = 14;
             this.openMode = 'newtab';
-            if (this._bgBlobUrl) {
-                URL.revokeObjectURL(this._bgBlobUrl);
-                this._bgBlobUrl = null;
-            }
+            this._revokeBgBlobUrl();
             this.bgDataUrl = null;
 
             this.dataSource = 'local';
@@ -706,9 +737,9 @@ document.addEventListener('alpine:init', () => {
             this.customIconsText = '{}';
             this.iconSourcesText = '';
 
-            PineconeDB.remove('bgDataBlob').catch(e => console.warn('PineconeDB.remove failed: bgDataBlob', e));
-            PineconeDB.remove('linkdingData').catch(e => console.warn('PineconeDB.remove failed: linkdingData', e));
-            PineconeDB.remove('pinecone-customIconDataUrls').catch(e => console.warn('PineconeDB.remove failed: pinecone-customIconDataUrls', e));
+            PineconeDB.remove('bgDataBlob');
+            PineconeDB.remove('linkdingData');
+            PineconeDB.remove('pinecone-customIconDataUrls');
 
             this._resetRefreshState();
             this.hideContextMenu();

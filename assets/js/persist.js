@@ -1,16 +1,26 @@
 document.addEventListener("alpine:init", () => {
   const storage = {
     get(key) {
-      try { const v = localStorage.getItem(key); return v != null ? JSON.parse(v) : undefined; }
-      catch (e) { console.warn('persist get failed for', key, e); return undefined; }
+      try {
+        const v = localStorage.getItem(key);
+        if (v == null) return undefined;
+        return JSON.parse(v);
+      } catch (e) {
+        console.warn('persist get failed for', key, e);
+        try { localStorage.removeItem(key); } catch {}
+        return undefined;
+      }
     },
     set(key, value) {
-      try { localStorage.setItem(key, JSON.stringify(value)); }
-      catch (e) { console.warn('persist set failed for', key, e); }
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {
+        console.warn('persist set failed for', key, e);
+      }
     },
     remove(key) {
       try { localStorage.removeItem(key); } catch (e) { console.warn('persist remove failed for', key, e); }
-      PineconeDB.remove(key);
+      PineconeDB.remove(key).catch(() => {});
     },
   };
 

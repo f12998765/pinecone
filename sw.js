@@ -6,12 +6,13 @@ const STATIC_ASSETS = [
   '/', '/index.html', '/manifest.json',
   '/assets/images/favicon.ico', '/assets/images/favicon.svg', '/assets/images/apple-touch-icon.png',
   '/assets/images/favicon-96x96.png', '/assets/images/web-app-manifest-192x192.png', '/assets/images/web-app-manifest-512x512.png',
+  '/assets/css/styles.css',
   '/assets/js/app.js', '/assets/js/icon-fetcher.js', '/assets/js/linkding-fetcher.js', '/assets/js/db.js', '/assets/js/persist.js',
   '/assets/vendor/alpinejs.3.15.12.min.js',
 ];
 
 async function cacheFirst(event) {
-  const cached = await caches.match(event.request);
+  const cached = await caches.match(event.request, { cacheName: STATIC_CACHE });
   if (cached) { bgUpdate(event.request); return cached; }
   try {
     const r = await fetch(event.request);
@@ -26,31 +27,33 @@ async function networkFirst(event) {
     if (r.ok) (await caches.open(DATA_CACHE)).put(event.request, r.clone());
     return r;
   } catch {
-    const cached = await caches.match(event.request);
+    const cached = await caches.match(event.request, { cacheName: DATA_CACHE });
     return cached || new Response('Unable to load services', { status: 503 });
   }
 }
 
+const bgUpdatePending = new Set();
 function bgUpdate(request) {
+  if (bgUpdatePending.has(request.url)) return;
+  bgUpdatePending.add(request.url);
   fetch(request).then(async r => {
     if (r.ok) (await caches.open(STATIC_CACHE)).put(request, r.clone());
-  }).catch(() => {});
+  }).catch(() => {}).finally(() => bgUpdatePending.delete(request.url));
 }
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(STATIC_CACHE).then(c =>
       Promise.all(STATIC_ASSETS.map(u => c.add(u).catch(err => console.warn('cache add failed:', u, err))))
-    )
+    ).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(keys.filter(k => k !== STATIC_CACHE && k !== DATA_CACHE).map(caches.delete.bind(caches))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('message', event => {
@@ -65,6 +68,6 @@ self.addEventListener('fetch', event => {
   if (pathname.startsWith('/local/icons/')) return event.respondWith(cacheFirst(event));
   if (STATIC_ASSETS.includes(pathname)) return event.respondWith(cacheFirst(event));
   event.respondWith(
-    fetch(event.request).catch(async () => (await caches.match(event.request)) || new Response('', { status: 404 }))
+    fetch(event.request).catch(async () => (await caches.match(event.request, { cacheName: DATA_CACHE })) || new Response('', { status: 404 }))
   );
 });

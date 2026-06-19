@@ -1,26 +1,45 @@
 const PineconeDB = {
     _db: null,
     _openFailed: false,
+    _openPromise: null,
 
     async _open() {
         if (this._db) return this._db;
         if (this._openFailed) throw new Error('IndexedDB unavailable');
-        return new Promise((resolve, reject) => {
+        if (this._openPromise) return this._openPromise;
+        this._openPromise = new Promise((resolve, reject) => {
             const req = indexedDB.open('PineconeDB', 1);
             req.onupgradeneeded = e => {
                 if (!e.target.result.objectStoreNames.contains('kv'))
                     e.target.result.createObjectStore('kv');
             };
-            req.onsuccess = e => resolve(this._db = e.target.result);
-            req.onerror = () => { this._openFailed = true; console.error('PineconeDB open failed:', req.error); reject(req.error); };
+            req.onsuccess = e => {
+                this._db = e.target.result;
+                this._openPromise = null;
+                resolve(this._db);
+            };
+            req.onerror = () => {
+                this._openFailed = true;
+                this._openPromise = null;
+                console.error('PineconeDB open failed:', req.error);
+                reject(req.error);
+            };
+            req.onblocked = () => {
+                this._openFailed = true;
+                this._openPromise = null;
+                reject(new Error('IndexedDB blocked by another tab'));
+            };
         });
+        return this._openPromise;
     },
 
     _request(mode, cb) {
         return this._open().then(db => new Promise((resolve, reject) => {
-            const req = cb(db.transaction('kv', mode).objectStore('kv'));
+            const tx = db.transaction('kv', mode);
+            const req = cb(tx.objectStore('kv'));
             req.onsuccess = () => resolve(req.result);
             req.onerror = () => reject(req.error);
+            tx.onabort = () => reject(tx.error || new Error('Transaction aborted'));
         }));
     },
 

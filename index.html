@@ -52,15 +52,14 @@
                     <div class="grid">
                         <template x-for="service in category.services">
                              <a :key="service.name"
-                                  :href="service._validUri ? service.uri : '#'"
+                                   :href="isValidURI(service.uri) ? service.uri : '#'"
                                   :target="openMode === 'self' ? '_self' : '_blank'"
                                   rel="noopener noreferrer"
                                   class="service-link"
                                   :data-text-position="textPosition"
                                   :class="'demo-effect-' + hoverEffect"
                                   :aria-label="'打开 ' + service.name"
-                                  :data-uri="service.uri"
-                                  @click="openMode === 'background' ? handleBackgroundClick($event, service.uri) : true">
+                                   :data-uri="service.uri">
                                  <img class="service-icon"
                                       :src="getServiceIcon(service.uri) || service.icon || '/assets/images/favicon.svg'"
                                      :alt="service.name"
@@ -128,7 +127,7 @@
                 <div class="icon-picker-grid" x-show="customIconModal.iconOptions?.length">
                     <template x-for="(item, i) in customIconModal.iconOptions" :key="i">
                         <div class="icon-picker-item" :class="{ selected: customIconModal.url === item.url }" @click="customIconModal.url = item.url" :title="item.label">
-                            <img :src="item.url" class="icon-picker-img" @error="event.target.src = '/assets/images/favicon.svg'">
+                            <img :src="item.url" class="icon-picker-img" @error="if(!event.target.dataset.fb){event.target.dataset.fb='1';event.target.src='/assets/images/favicon.svg'}">
                             <span class="icon-picker-domain" x-text="item.label"></span>
                         </div>
                     </template>
@@ -203,15 +202,15 @@
             <div class="sidebar-body">
             <h4 class="sidebar-section-title">数据来源</h4>
             <div class="effect-pills" style="margin-bottom:16px">
-                <button class="effect-pill" :class="{ selected: dataSource === 'local' }" @click="dataSource = 'local'">本地</button>
-                <button class="effect-pill" :class="{ selected: dataSource === 'linkding' }" @click="dataSource = 'linkding'">Linkding</button>
+                <button class="effect-pill" :class="{ selected: dataSource === 'local' }" @click="dataSource !== 'local' && toggleDataSource()">本地</button>
+                <button class="effect-pill" :class="{ selected: dataSource === 'linkding' }" @click="dataSource !== 'linkding' && toggleDataSource()">Linkding</button>
             </div>
             <template x-if="dataSource === 'linkding'">
                 <div class="sidebar-section">
                         <form @submit.prevent>
                             <div class="setting-item">
                                 <label class="setting-label">API 地址</label>
-                                <input type="text" class="select-input" x-model="linkdingUrl" id="linkding-url" name="username" autocomplete="username" placeholder="https://linkding.example.com">
+                                <input type="text" class="select-input" x-model="linkdingUrl" id="linkding-url" name="linkding-url" autocomplete="url" placeholder="https://linkding.example.com">
                              </div>
                              <div class="setting-item">
                                  <label class="setting-label">API 令牌</label>
@@ -342,16 +341,13 @@
                     <label class="setting-label">打开方式</label>
                     <div class="custom-select" x-data="{ open: false }" @click.outside="open = false">
                         <button type="button" class="cs-trigger" :aria-expanded="open" @click="open = !open" @keydown.escape="open = false"
-                            :style="{ color: openMode === 'self' ? '#ff9f0a' : (openMode === 'background' ? '#30d158' : '#007aff') }">
-                            <span x-text="openMode === 'self' ? '当前标签页' : (openMode === 'background' ? '后台新标签' : '新标签页')"></span>
+                            :style="{ color: openMode === 'self' ? '#ff9f0a' : '#007aff' }">
+                            <span x-text="openMode === 'self' ? '当前标签页' : '新标签页'"></span>
                             <svg class="cs-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                         </button>
                         <div class="cs-dropdown" x-show="open" x-cloak>
                             <button type="button" class="cs-option" :class="{ selected: openMode === 'newtab' }" @click="openMode = 'newtab'; open = false" style="color:#007aff">
                                 <span>新标签页</span>
-                            </button>
-                            <button type="button" class="cs-option" :class="{ selected: openMode === 'background' }" @click="openMode = 'background'; open = false" style="color:#30d158">
-                                <span>后台新标签</span>
                             </button>
                             <button type="button" class="cs-option" :class="{ selected: openMode === 'self' }" @click="openMode = 'self'; open = false" style="color:#ff9f0a">
                                 <span>当前标签页</span>

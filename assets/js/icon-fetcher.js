@@ -6,6 +6,7 @@ const IconFetcher = {
     _ready: false,
     _initialized: false,
     _generation: 0,
+    _saveTimer: null,
 
     init() {
         if (this._initialized) return;
@@ -24,29 +25,18 @@ const IconFetcher = {
         this._readyListeners = [];
     },
 
-    onReady(callback) {
-        this._ready ? callback() : this._readyListeners.push(callback);
-    },
-
-    getAllCached() {
-        return this._cache ? { ...this._cache } : {};
-    },
-
-    onResolved(callback) {
-        this._listeners.push(callback);
-    },
+    onReady(cb) { this._ready ? cb() : this._readyListeners.push(cb); },
+    onResolved(cb) { this._listeners.push(cb); },
+    offResolved(cb) { this._listeners = this._listeners.filter(c => c !== cb); },
+    getAllCached() { return this._cache ? { ...this._cache } : {}; },
 
     _notify(domain, url) {
         this._listeners.forEach(cb => { try { cb(domain, url); } catch {} });
     },
 
-    _saveTimer: null,
-
     _saveCache() {
         clearTimeout(this._saveTimer);
-        this._saveTimer = setTimeout(() => {
-            PineconeDB.set('pinecone-iconMap', this._cache);
-        }, 300);
+        this._saveTimer = setTimeout(() => PineconeDB.set('pinecone-iconMap', this._cache), 300);
     },
 
     resolveDomain(domain) {
@@ -64,6 +54,8 @@ const IconFetcher = {
             return url;
         }).catch(() => {
             if (gen !== this._generation) return '/assets/images/favicon.svg';
+            if (this._cache) this._cache[domain] = '/assets/images/favicon.svg';
+            this._saveCache();
             this._notify(domain, '/assets/images/favicon.svg');
             delete this._resolving[domain];
             return '/assets/images/favicon.svg';
@@ -86,57 +78,66 @@ const IconFetcher = {
         if (await this._checkImg(`https://favicon.im/${domain}?throw-error-on-404=true&larger=true&${qs}`)) return `https://favicon.im/${domain}?throw-error-on-404=true&larger=true&${qs}`;
         const v = await this._tryVemetric(domain);
         if (v) return v;
+        if (await this._checkImg(`https://www.google.com/s2/favicons?domain=${domain}&sz=64&${qs}`)) return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+        if (await this._checkImg(`https://icon.horse/icon/${domain}?${qs}`)) return `https://icon.horse/icon/${domain}`;
+        if (await this._checkImg(`https://icons.duckduckgo.com/ip3/${domain}.ico?${qs}`)) return `https://icons.duckduckgo.com/ip3/${domain}.ico`;
         if (await this._checkImg(`https://${domain}/apple-touch-icon.png?${qs}`)) return `https://${domain}/apple-touch-icon.png?${qs}`;
+        if (await this._checkImg(`https://${domain}/favicon.ico?${qs}`)) return `https://${domain}/favicon.ico`;
         throw new Error('not found');
     },
 
     async _tryVemetric(domain) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 5000);
         try {
-            const res = await fetch(`https://favicon.vemetric.com/${domain}?response=json&_=${Date.now()}`);
+            const res = await fetch(`https://favicon.vemetric.com/${domain}?response=json&_=${Date.now()}`, { signal: controller.signal });
             if (!res.ok) return null;
             const data = await res.json();
             return data?.source !== 'default' && data?.url && (await this._checkImg(data.url)) ? data.url : null;
         } catch { return null; }
+        finally { clearTimeout(timer); }
     },
 
     _checkImg(url) {
-        return Promise.race([
-            new Promise(resolve => { const i = new Image(); i.onload = () => resolve(true); i.onerror = () => resolve(false); i.src = url; }),
-            new Promise(resolve => setTimeout(() => resolve(false), 4000))
-        ]);
+        return new Promise(resolve => {
+            const i = new Image();
+            let done = false;
+            const finish = (result) => { if (!done) { done = true; i.onload = i.onerror = null; resolve(result); } };
+            i.onload = () => finish(true);
+            i.onerror = () => finish(false);
+            i.src = url;
+            setTimeout(() => { finish(false); i.src = ''; }, 4000);
+        });
     },
 
     async fetchAllIconOptions(domain, { onProgress, onItem, customSources }) {
         const qs = `_=${Date.now()}`;
         let completed = 0;
-        const total = 4 + (customSources?.length || 0);
+        const total = 8 + (customSources?.length || 0);
         const trySource = async (url, label) => {
-            const ok = await this._checkImg(url);
-            if (ok && onItem) onItem({ url, label });
-            return ok;
+            if (await this._checkImg(url)) { if (onItem) onItem({ url, label }); return true; }
+            return false;
         };
         const tick = () => { completed++; if (onProgress) onProgress(`正在获取图标 (${completed}/${total})...`); };
-
-        const tasks = [
+        await Promise.allSettled([
             trySource(`https://twenty-icons.com/${domain}?${qs}`, 'twenty-icons').then(tick),
             trySource(`https://favicon.im/${domain}?throw-error-on-404=true&larger=true&${qs}`, 'favicon.im').then(tick),
-            (async () => {
-                const url = await this._tryVemetric(domain);
-                if (url && onItem) onItem({ url, label: 'favicon.vemetric' });
-            })().then(tick),
+            (async () => { const url = await this._tryVemetric(domain); if (url && onItem) onItem({ url, label: 'favicon.vemetric' }); })().then(tick),
+            trySource(`https://www.google.com/s2/favicons?domain=${domain}&sz=64&${qs}`, 'google').then(tick),
+            trySource(`https://icon.horse/icon/${domain}?${qs}`, 'icon.horse').then(tick),
+            trySource(`https://icons.duckduckgo.com/ip3/${domain}.ico?${qs}`, 'duckduckgo').then(tick),
             trySource(`https://${domain}/apple-touch-icon.png?${qs}`, 'apple-touch-icon').then(tick),
-        ];
-
-        for (const [i, src] of (customSources || []).entries()) {
-            const sep = src.includes('?') ? '&' : '?';
-            tasks.push(trySource(src.replace(/\{domain\}/g, domain) + `${sep}_cb=${Date.now()}_${i}`, `源 ${i + 1}`).then(tick));
-        }
-
-        await Promise.allSettled(tasks);
+            trySource(`https://${domain}/favicon.ico?${qs}`, 'favicon.ico').then(tick),
+            ...(customSources || []).map(([i, src]) => {
+                const sep = src.includes('?') ? '&' : '?';
+                return trySource(src.replace(/\{domain\}/g, domain) + `${sep}_cb=${Date.now()}_${i}`, `源 ${i + 1}`).then(tick);
+            }),
+        ]);
         if (onProgress) onProgress('');
     },
 
     refreshCache() {
+        clearTimeout(this._saveTimer);
         this._cache = {};
         this._resolving = {};
         this._generation++;
@@ -144,8 +145,7 @@ const IconFetcher = {
     },
 
     extractDomain(uri) {
-        if (!uri || typeof uri !== 'string') return null;
-        if (uri.startsWith('/') || uri.startsWith('./') || uri.startsWith('../')) return null;
+        if (!uri || typeof uri !== 'string' || uri.startsWith('/') || uri.startsWith('./') || uri.startsWith('../')) return null;
         try { return new URL(uri).hostname; } catch { return null; }
     }
 };

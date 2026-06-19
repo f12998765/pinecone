@@ -21,8 +21,6 @@
     --bg-hover: #e8e8ec;
     --bg-active: #e0e0e4;
     --bg-modal-overlay: rgba(0,0,0,0.3);
-    --bg-tag-picker: #f0f0f2;
-    --bg-icon-picker: #e8e8ec;
     --bg-pill: rgba(220,220,225,0.55);
     --bg-pill-selected: rgba(220,220,225,0.82);
     --text-primary: #1d1d1f;
@@ -36,6 +34,7 @@
     --shadow-menu: 0 8px 24px rgba(0,0,0,0.12);
     --shadow-card: 0 0 0 0.5px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.04);
 
+    --radius-xs: 6px;
     --radius-sm: 8px;
     --radius-md: 10px;
     --radius-lg: 14px;
@@ -176,13 +175,13 @@ body:hover .action-btn { opacity: 1; }
     letter-spacing: -0.3px;
 }
 
-.sidebar-close {
+.sidebar-close, .modal-close {
     width: 28px; height: 28px;
     border: none;
     background: transparent;
     font-size: 1.1em;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: var(--radius-xs);
     color: var(--text-tertiary);
     display: flex;
     align-items: center;
@@ -190,7 +189,7 @@ body:hover .action-btn { opacity: 1; }
     transition: all var(--transition-fast);
 }
 
-.sidebar-close:hover { background: rgba(0, 0, 0, 0.05); color: var(--text-primary); }
+.sidebar-close:hover, .modal-close:hover { background: rgba(0, 0, 0, 0.05); color: var(--text-primary); }
 
 .sidebar-body {
     flex: 1;
@@ -229,7 +228,7 @@ body:hover .action-btn { opacity: 1; }
     width: 26px; height: 26px;
     padding: 0;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-xs);
     cursor: pointer;
     background: none;
 }
@@ -283,7 +282,7 @@ body:hover .action-btn { opacity: 1; }
     display: inline-block;
     padding: 5px 12px;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-xs);
     background: var(--color-white);
     color: var(--color-blue);
     font-size: 0.82em;
@@ -411,9 +410,6 @@ input:checked + .slider:before { transform: translateX(18px); }
     text-decoration: none;
     box-sizing: border-box;
 }
-
-.service-link:hover { background: transparent; transform: none; box-shadow: none; }
-.service-link:active { transform: none; }
 
 .demo-effect-1:hover .service-icon { transform: scale(1.15); transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .demo-effect-2:hover .service-icon { transform: scale(1.3) translateY(-8px); filter: drop-shadow(0 8px 12px rgba(0,0,0,0.1)); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -712,26 +708,11 @@ input:checked + .slider:before { transform: translateX(18px); }
     background: transparent;
     cursor: pointer;
     padding: 4px 8px;
-    border-radius: 6px;
+    border-radius: var(--radius-xs);
     transition: background 0.1s;
 }
 
 .modal-clear-btn:hover { background: rgba(255,59,48,0.08); }
-
-.modal-close {
-    width: 28px; height: 28px;
-    border: none;
-    background: transparent;
-    font-size: 1.1em;
-    cursor: pointer;
-    border-radius: 6px;
-    color: var(--color-gray);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-close:hover { background: rgba(0,0,0,0.05); }
 
 .modal-body { padding: 0 16px 14px; }
 
@@ -911,7 +892,7 @@ input:checked + .slider:before { transform: translateX(18px); }
     background: rgba(0,122,255,0.08);
 }
 
-.icon-picker-img { width: 32px; height: 32px; border-radius: 6px; object-fit: contain; }
+.icon-picker-img { width: 32px; height: 32px; border-radius: var(--radius-xs); object-fit: contain; }
 
 .icon-picker-domain {
     font-size: 9px;
@@ -1005,7 +986,7 @@ input:checked + .slider:before { transform: translateX(18px); }
     .native-color-picker { width: 36px; height: 36px; }
     .btn { padding: 12px 16px; }
     .effect-pill { padding: 10px 12px; }
-    .sidebar-close { width: 36px; height: 36px; font-size: 1.3em; }
+    .sidebar-close, .modal-close { width: 36px; height: 36px; font-size: 1.3em; }
     .section-reset { padding: 12px; }
     .sidebar-section { padding: 4px 12px 10px; }
     .sidebar-section-title { margin: 4px 4px 6px; }
@@ -1015,7 +996,7 @@ input:checked + .slider:before { transform: translateX(18px); }
         -webkit-tap-highlight-color: transparent;
     }
 
-    input, select, textarea { font-size: 16px !important; }
+    .select-input, .textarea-input, .file-input { font-size: 16px !important; }
 
     .modal-card { width: 100vw; max-width: 100vw; height: 100dvh; border-radius: 0; display: flex; flex-direction: column; }
     .modal-body { flex: 1; overflow-y: auto; }

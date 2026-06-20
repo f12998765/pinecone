@@ -2,15 +2,6 @@ const CACHE_VERSION = 'v5.2';
 const STATIC_CACHE = `pinecone-static-${CACHE_VERSION}`;
 const DATA_CACHE = `pinecone-data-${CACHE_VERSION}`;
 
-const STATIC_ASSETS = [
-  '/', '/index.html', '/manifest.json',
-  '/assets/images/favicon.ico', '/assets/images/favicon.svg', '/assets/images/apple-touch-icon.png',
-  '/assets/images/favicon-96x96.png', '/assets/images/web-app-manifest-192x192.png', '/assets/images/web-app-manifest-512x512.png',
-  '/assets/css/styles.css',
-  '/assets/js/app.js', '/assets/js/icon-fetcher.js', '/assets/js/linkding-fetcher.js', '/assets/js/db.js', '/assets/js/persist.js',
-  '/assets/vendor/alpinejs.3.15.12.min.js',
-];
-
 async function cacheFirst(event) {
   const cached = await caches.match(event.request, { cacheName: STATIC_CACHE });
   if (cached) { bgUpdate(event.request); return cached; }
@@ -43,16 +34,17 @@ function bgUpdate(request) {
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then(c =>
-      Promise.all(STATIC_ASSETS.map(u => c.add(u).catch(err => console.warn('cache add failed:', u, err))))
-    ).then(() => self.skipWaiting())
+    Promise.race([
+      caches.open(STATIC_CACHE).then(() => self.skipWaiting()),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('install timed out')), 10000))
+    ]).catch(err => console.warn('install failed:', err))
   );
 });
 
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(keys.filter(k => k !== STATIC_CACHE && k !== DATA_CACHE).map(caches.delete.bind(caches))))
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim()).catch(err => console.warn('activate cleanup failed:', err))
   );
 });
 
@@ -61,12 +53,17 @@ self.addEventListener('message', event => {
 });
 
 self.addEventListener('fetch', event => {
-  const { pathname } = new URL(event.request.url);
+  const { pathname, protocol } = new URL(event.request.url);
+  // Only cache http/https requests
+  if (protocol !== 'http:' && protocol !== 'https:') return;
   if (pathname === '/sw.js') return;
-  if (pathname.includes('/api/')) return;
-  if (pathname.endsWith('/local/services.json')) return event.respondWith(networkFirst(event));
+  if (pathname.startsWith('/api/')) return;
+  if (pathname === '/local/services.json') return event.respondWith(networkFirst(event));
   if (pathname.startsWith('/local/icons/')) return event.respondWith(cacheFirst(event));
-  if (STATIC_ASSETS.includes(pathname)) return event.respondWith(cacheFirst(event));
+  // Static assets by file extension
+  if (/\.(js|css|png|svg|ico|woff2?)$/.test(pathname)) return event.respondWith(cacheFirst(event));
+  // Navigation requests
+  if (event.request.mode === 'navigate') return event.respondWith(networkFirst(event));
   event.respondWith(
     fetch(event.request).catch(async () => (await caches.match(event.request, { cacheName: DATA_CACHE })) || new Response('', { status: 404 }))
   );

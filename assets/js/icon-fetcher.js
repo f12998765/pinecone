@@ -53,12 +53,12 @@ const IconFetcher = {
             delete this._resolving[domain];
             return url;
         }).catch(() => {
-            if (gen !== this._generation) return '/assets/images/favicon.svg';
-            if (this._cache) this._cache[domain] = '/assets/images/favicon.svg';
+            if (gen !== this._generation) return '/assets/images/apple-touch-icon.png';
+            if (this._cache) this._cache[domain] = '/assets/images/apple-touch-icon.png';
             this._saveCache();
-            this._notify(domain, '/assets/images/favicon.svg');
+            this._notify(domain, '/assets/images/apple-touch-icon.png');
             delete this._resolving[domain];
-            return '/assets/images/favicon.svg';
+            return '/assets/images/apple-touch-icon.png';
         });
 
         this._resolving[domain] = promise;
@@ -128,7 +128,7 @@ const IconFetcher = {
             trySource(`https://icons.duckduckgo.com/ip3/${domain}.ico?${qs}`, 'duckduckgo').then(tick),
             trySource(`https://${domain}/apple-touch-icon.png?${qs}`, 'apple-touch-icon').then(tick),
             trySource(`https://${domain}/favicon.ico?${qs}`, 'favicon.ico').then(tick),
-            ...(customSources || []).map(([i, src]) => {
+            ...(customSources || []).map((src, i) => {
                 const sep = src.includes('?') ? '&' : '?';
                 return trySource(src.replace(/\{domain\}/g, domain) + `${sep}_cb=${Date.now()}_${i}`, `源 ${i + 1}`).then(tick);
             }),

@@ -1,5 +1,5 @@
 const LinkdingFetcher = {
-    MAX_PAGES: 100,
+    MAX_PAGES: 50,
 
     _req(url, token) {
         return fetch(url, { headers: { Authorization: `Token ${token}` } }).then(res => {
@@ -13,9 +13,12 @@ const LinkdingFetcher = {
     _makeWrap(proxyUrl) {
         const proxy = proxyUrl ? proxyUrl.trim().replace(/\/+$/, '') : '';
         if (!proxy) return raw => raw;
-        return raw => proxy.includes('{url}')
-            ? proxy.replace(/\{url\}/g, encodeURIComponent(raw))
-            : proxy + '/' + encodeURIComponent(raw);
+        return raw => {
+            const encoded = encodeURIComponent(raw);
+            if (proxy.includes('{url}')) return proxy.replace(/\{url\}/g, encoded);
+            const separator = proxy.includes('?') ? '' : '/';
+            return proxy + separator + encoded;
+        };
     },
 
     async _paginate(buildUrl, apiToken, proxyUrl) {
@@ -36,7 +39,7 @@ const LinkdingFetcher = {
 
     async fetchBookmarks(apiUrl, apiToken, filterTags, proxyUrl) {
         const base = apiUrl.replace(/\/+$/, '');
-        const q = filterTags?.length ? `&q=${filterTags.map(t => `#${t}`).join(' or ')}` : '';
+        const q = filterTags?.length ? `&q=${encodeURIComponent(filterTags.map(t => `#${t}`).join(' or '))}` : '';
         const items = await this._paginate(() => `${base}/api/bookmarks/?limit=100${q}`, apiToken, proxyUrl);
         return this._toServices(items, filterTags);
     },

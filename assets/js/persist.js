@@ -18,10 +18,6 @@ document.addEventListener("alpine:init", () => {
         console.warn('persist set failed for', key, e);
       }
     },
-    remove(key) {
-      try { localStorage.removeItem(key); } catch (e) { console.warn('persist remove failed for', key, e); }
-      PineconeDB.remove(key).catch(() => {});
-    },
   };
 
   const persist = () => {

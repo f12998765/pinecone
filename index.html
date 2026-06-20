@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#ffffff">
     <link rel="apple-touch-icon" href="assets/images/apple-touch-icon.png">
     <link rel="icon" href="assets/images/favicon.ico" sizes="any">
-    <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/images/apple-touch-icon.png" type="image/png">
     <link rel="stylesheet" href="assets/css/styles.css">
     <style>[x-cloak] { display: none !important; }</style>
 </head>
@@ -61,7 +61,7 @@
                                   :aria-label="'打开 ' + service.name"
                                    :data-uri="service.uri">
                                  <img class="service-icon"
-                                      :src="getServiceIcon(service.uri) || service.icon || '/assets/images/favicon.svg'"
+                                      :src="getServiceIcon(service.uri) || service.icon || '/assets/images/apple-touch-icon.png'"
                                      :alt="service.name"
                                      loading="lazy"
                                      @error="imgError">
@@ -127,7 +127,7 @@
                 <div class="icon-picker-grid" x-show="customIconModal.iconOptions?.length">
                     <template x-for="(item, i) in customIconModal.iconOptions" :key="i">
                         <div class="icon-picker-item" :class="{ selected: customIconModal.url === item.url }" @click="customIconModal.url = item.url" :title="item.label">
-                            <img :src="item.url" class="icon-picker-img" @error="if(!event.target.dataset.fb){event.target.dataset.fb='1';event.target.src='/assets/images/favicon.svg'}">
+                            <img :src="item.url" class="icon-picker-img" @error="if(!event.target.dataset.fb){event.target.dataset.fb='1';event.target.src='/assets/images/apple-touch-icon.png'}">
                             <span class="icon-picker-domain" x-text="item.label"></span>
                         </div>
                     </template>
@@ -407,13 +407,12 @@
             <button class="section-reset" @click="resetAll">重置所有设置</button>
         </div>
     </div>
-
+</div>
     <div class="sw-update-toast" x-show="swUpdateAvailable" x-transition.opacity.duration.200ms>
         <span>新版本已就绪</span>
         <button class="sw-update-btn" @click="applySwUpdate">刷新</button>
         <button class="sw-update-dismiss" @click="dismissSwUpdate" aria-label="关闭">✕</button>
     </div>
-</div>
 
     <script defer src="assets/js/icon-fetcher.js"></script>
     <script defer src="assets/js/linkding-fetcher.js"></script>

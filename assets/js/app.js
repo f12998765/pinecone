@@ -6,6 +6,7 @@ const DEFAULTS = {
     textSize: 18, textColor: '#1a1a1a', maxWidth: 1421, showNames: true,
     textIconGap: 12, textPosition: 'column', gridColumns: 8, hoverEffect: 2,
     settingsTextSize: 14, openMode: 'newtab', dataSource: 'local',
+    linkdingToken: '',
     linkdingProxy: 'https://corsproxy.io/?url={url}', linkdingProxyEnabled: false,
 };
 
@@ -48,7 +49,7 @@ document.addEventListener('alpine:init', () => {
 
         dataSource: Alpine.$persist('local').as('pinecone-dataSource'),
         linkdingUrl: Alpine.$persist('').as('pinecone-linkdingUrl'),
-        linkdingToken: Alpine.$persist('').as('pinecone-linkdingToken'),
+        linkdingToken: '',
         linkdingProxy: Alpine.$persist('https://corsproxy.io/?url={url}').as('pinecone-linkdingProxy'),
         linkdingProxyEnabled: Alpine.$persist(false).as('pinecone-linkdingProxyEnabled'),
         linkdingData: null,
@@ -229,9 +230,7 @@ document.addEventListener('alpine:init', () => {
             if (pendingSwWorker && pendingSwWorker.state === 'installed') {
                 pendingSwWorker.postMessage({ action: 'skipWaiting' });
             }
-            if (navigator.serviceWorker?.controller) {
-                navigator.serviceWorker.controller.postMessage({ action: 'skipWaiting' });
-            }
+            pendingSwWorker = null;
             navigator.serviceWorker?.getRegistration().then(reg => {
                 if (reg?.waiting) reg.waiting.postMessage({ action: 'skipWaiting' });
                 setTimeout(() => window.location.reload(), 300);
@@ -627,6 +626,7 @@ document.addEventListener('alpine:init', () => {
             this._revokeBgBlobUrl();
             this.bgDataUrl = null;
             this.linkdingData = null;
+            this.dataSourceLoading = false;
             this._setMessage('');
             this.linkdingTags = [];
             this.linkdingSelectedTags = [];
@@ -651,7 +651,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         imgError(e) {
-            if (!e.target.dataset.fallback) { e.target.dataset.fallback = '1'; e.target.src = '/assets/images/favicon.svg'; }
+            if (!e.target.dataset.fallback) { e.target.dataset.fallback = '1'; e.target.src = '/assets/images/apple-touch-icon.png'; }
         },
 
         isValidURI(uri) {

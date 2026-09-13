@@ -138,11 +138,6 @@
         "category": "🎮 游戏",
         "services": [
             {
-                "name": "Todo.txt",
-                "uri": "https://xizero.com/todo.txt/",
-                "icon": "/local/icons/todo.jpg"
-            },
-            {
                 "name": "FFXIV Wiki",
                 "uri": "https://ff14.huijiwiki.com/wiki/%E9%A6%96%E9%A1%B5",
                 "icon": "/local/icons/ffxiv_wiki.webp"
@@ -151,11 +146,6 @@
                 "name": "艾欧泽亚售楼中心",
                 "uri": "https://house.ffxiv.cyou/",
                 "icon": "/local/icons/ffxiv_house.png"
-            },
-            {
-                "name": "Soulframe Wiki",
-                "uri": "https://wiki.avakot.org/",
-                "icon": "/local/icons/soulframe_wiki.png"
             },
             {
                 "name": "Warframe 中文维基",
@@ -173,9 +163,24 @@
                 "icon": "/local/icons/wm.webp"
             },
             {
+                "name": "Warframe 警报",
+                "uri": "https://browse.wf/live",
+                "icon": "/local/icons/browsewf.ico"
+            },
+            {
                 "name": "Warframe 掉宝",
                 "uri": "https://warframestreams.lol/",
                 "icon": "/local/icons/warframestreams.png"
+            },
+            {
+                "name": "Soulframe Wiki",
+                "uri": "https://wiki.avakot.org/",
+                "icon": "/local/icons/soulframe_wiki.png"
+            },
+            {
+                "name": "Soulframe Wiki",
+                "uri": "https://wiki.avakot.org/",
+                "icon": "/local/icons/soulframe_wiki.png"
             }
         ]
     },
@@ -206,6 +211,11 @@
                 "name": "Bangumi",
                 "uri": "https://bgm.tv/",
                 "icon": "/local/icons/bgmtv.png"
+            },
+            {
+                "name": "Todo.txt",
+                "uri": "https://xizero.com/todo.txt/",
+                "icon": "/local/icons/todo.jpg"
             }
         ]
     }

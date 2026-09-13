@@ -58,9 +58,9 @@
                 "icon": "/local/icons/douyin.png"
             },
             {
-                "name": "游名星空",
+                "name": "游民星空",
                 "uri": "https://www.gamersky.com/",
-                "icon": "/local/icons/gamersky.ico"
+                "icon": "/local/icons/gamersky.webp"
             },
             {
                 "name": "NGA",
@@ -171,11 +171,6 @@
                 "name": "Warframe 掉宝",
                 "uri": "https://warframestreams.lol/",
                 "icon": "/local/icons/warframestreams.png"
-            },
-            {
-                "name": "Soulframe Wiki",
-                "uri": "https://wiki.avakot.org/",
-                "icon": "/local/icons/soulframe_wiki.png"
             },
             {
                 "name": "Soulframe Wiki",

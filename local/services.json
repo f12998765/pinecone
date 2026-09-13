@@ -58,9 +58,9 @@
                 "icon": "/local/icons/douyin.png"
             },
             {
-                "name": "小红书",
-                "uri": "https://www.xiaohongshu.com/",
-                "icon": "/local/icons/redbook.png"
+                "name": "游名星空",
+                "uri": "https://www.gamersky.com/",
+                "icon": "/local/icons/gamersky.ico"
             },
             {
                 "name": "NGA",
@@ -98,14 +98,14 @@
                 "icon": "/local/icons/deepseek.png"
             },
             {
+                "name": "Qwen",
+                "uri": "https://chat.qwen.ai/",
+                "icon": "/local/icons/qwen.png"
+            },
+            {
                 "name": "DuckDuckGo AI",
                 "uri": "https://duck.ai/",
                 "icon": "/local/icons/duckduckgo.png"
-            },
-            {
-                "name": "Microsoft Copilot",
-                "uri": "https://copilot.microsoft.com/",
-                "icon": "/local/icons/copilot-color.svg"
             },
             {
                 "name": "Gemini",
@@ -113,9 +113,9 @@
                 "icon": "/local/icons/gemini.png"
             },
             {
-                "name": "Qwen",
-                "uri": "https://chat.qwen.ai/",
-                "icon": "/local/icons/qwen.png"
+                "name": "Draw.io",
+                "uri": "https://app.diagrams.net/",
+                "icon": "/local/icons/draw.png"
             },
             {
                 "name": "OutLook",

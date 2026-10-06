@@ -211,6 +211,11 @@
                 "name": "Todo.txt",
                 "uri": "https://xizero.com/todo.txt/",
                 "icon": "/local/icons/todo.jpg"
+            },
+            {
+                "name": "Google keep",
+                "uri": "https://keep.google.com/",
+                "icon": "/local/icons/keep.png"
             }
         ]
     }
